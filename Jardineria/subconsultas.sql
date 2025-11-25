@@ -1,3 +1,4 @@
+-- Active: 1762272161423@@127.0.0.1@3306@jardineria
 USE jardineria;
 
 -----------------------------------------------------
@@ -60,14 +61,86 @@ HAVING Margen_Ganancia > 50;
 -- Enunciado: Mostrar la lista de pedidos que se entregaron con retraso (donde fecha_entrega es mayor que fecha_esperada), incluyendo el número de días de retraso y el nombre del cliente que realizó el pedido. Se debe usar un CTE
 WITH sub AS (
     SELECT
+        ped.codigo_pedido,
+        ped.fecha_pedido,
+        ped.fecha_esperada,
+        ped.fecha_entrega,
+        CONCAT(ped.fecha_esperada, '>', ped.fecha_entrega) AS fechas_comparation,
         DATEDIFF(ped.fecha_entrega, ped.fecha_esperada) AS dias_retraso,
         CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto) AS nombre_cliente
-    FROM cliente cli
+    FROM pedido ped
+    LEFT JOIN cliente cli
+        ON ped.codigo_cliente = cli.codigo_cliente
 )
 SELECT
-    ped.codigo_pedido AS "Codigo Pedido",
-    ped.fecha_pedido AS "Fecha Pedido",
+    sub.codigo_pedido AS "Codigo Pedido",
+    sub.fecha_pedido AS "Fecha Pedido",
+    sub.fechas_comparation AS " Fecha Esperada>Entregada",
     sub.dias_retraso AS "Dias de Retraso",
-    sub.cliente_pedido AS "Cliente Pedido"
-FROM pedido ped
-WHERE ped.fecha_entrega > ped.fecha_esperada;
+    sub.nombre_cliente AS "Cliente Pedido"
+FROM sub
+WHERE sub.fecha_entrega > sub.fecha_esperada;
+
+-- SELECT
+--     ped.codigo_pedido AS "Codigo Pedido",
+--     ped.fecha_pedido AS "Fecha Pedido",
+--     DATEDIFF(ped.fecha_entrega, ped.fecha_esperada) AS dias_retraso,
+--     sub.nombre_cliente AS "Cliente Pedido"
+-- FROM pedido ped
+-- LEFT JOIN (
+--     SELECT
+--         CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto) AS nombre_cliente,
+--         cli.codigo_cliente AS codigo_cliente
+--     FROM cliente cli
+-- ) sub
+--     ON sub.codigo_cliente = ped.codigo_cliente
+-- WHERE ped.fecha_entrega > ped.fecha_esperada;
+
+------------------------------------------------------
+-- Consulta 5 – Empleados por oficina:
+------------------------------------------------------
+
+-- Enunciado: Listar cada oficina (mostrando su código y ciudad) junto con el total de empleados que trabajan en ella. Se debe utilizar un CTE.
+WITH OficinasEmpleados AS (
+    SELECT
+        ofi.codigo_oficina,
+        ofi.ciudad,
+        IFNULL(COUNT(emp.codigo_empleado), 0) AS total_empleados
+    FROM oficina ofi
+    LEFT JOIN empleado emp
+        ON emp.codigo_oficina = ofi.codigo_oficina
+    GROUP BY -- SE QUE SON MUCHAS CONDICIONES, PERO SOLO ME ASEGURO DE QUE NO SE REPITEN OFICINAS Y SE SUMAN AUNQUE SE QUE CON LA PK DEBERIA SER SUFICIENTE
+        ofi.codigo_oficina,
+        ofi.ciudad,
+        ofi.linea_direccion2,
+        ofi.linea_direccion1,
+        ofi.codigo_postal,
+        ofi.pais
+)
+SELECT
+    OficinasEmpleados.codigo_oficina AS "Codigo Oficina",
+    OficinasEmpleados.ciudad AS "Ciudad Oficina",
+    OficinasEmpleados.total_empleados AS "Total Empleados Oficina"
+FROM OficinasEmpleados;
+
+-- WITH sub AS (
+--     SELECT
+--         ofi.codigo_oficina,
+--         CONCAT(ofi.linea_direccion2, '-', ofi.linea_direccion1, ', ', ofi.codigo_postal, ', ', ofi.ciudad, ', ', ofi.pais) AS direccion_oficina,
+--         IFNULL(COUNT(emp.codigo_empleado), 0) AS total_empleados
+--     FROM oficina ofi
+--     LEFT JOIN empleado emp
+--         ON emp.codigo_oficina = ofi.codigo_oficina
+--     GROUP BY ofi.codigo_oficina
+-- )
+-- SELECT
+--     sub.codigo_oficina AS "Codigo Oficina",
+--     sub.direccion_oficina AS "Direccion Oficina",
+--     sub.total_empleados AS "Total Empleados Oficina"
+-- FROM sub;
+
+------------------------------------------------------
+-- Consulta 6 – Jefes y número de subordinados:
+------------------------------------------------------
+
+-- Enunciado: Obtener la lista de empleados que actúan como jefes (tienen empleados a su cargo) junto con el número de subordinados que tienen y la ciudad de su oficina. Se debe usar un JOIN y un CTE.
