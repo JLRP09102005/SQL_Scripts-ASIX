@@ -47,4 +47,27 @@ GROUP BY
 SELECT
     pro.codigo_producto AS "Codigo Producto",
     pro.nombre AS "Nombre Producto",
-    pro.gama AS "Gama Producto"
+    pro.gama AS "Gama Producto",
+    (SUM(pro.precio_venta - pro.precio_proveedor)) AS Margen_Ganancia
+FROM producto pro
+GROUP BY pro.codigo_producto
+HAVING Margen_Ganancia > 50;
+
+------------------------------------------------------
+-- Consulta 4 – Pedidos entregados tarde:
+------------------------------------------------------
+
+-- Enunciado: Mostrar la lista de pedidos que se entregaron con retraso (donde fecha_entrega es mayor que fecha_esperada), incluyendo el número de días de retraso y el nombre del cliente que realizó el pedido. Se debe usar un CTE
+WITH sub AS (
+    SELECT
+        DATEDIFF(ped.fecha_entrega, ped.fecha_esperada) AS dias_retraso,
+        CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto) AS nombre_cliente
+    FROM cliente cli
+)
+SELECT
+    ped.codigo_pedido AS "Codigo Pedido",
+    ped.fecha_pedido AS "Fecha Pedido",
+    sub.dias_retraso AS "Dias de Retraso",
+    sub.cliente_pedido AS "Cliente Pedido"
+FROM pedido ped
+WHERE ped.fecha_entrega > ped.fecha_esperada;
