@@ -1,4 +1,4 @@
--- Active: 1762272161423@@127.0.0.1@3306@jardineria
+-- Active: 1763026326945@@127.0.0.1@3306@jardineria
 USE jardineria;
 
 -----------------------------------------------------
@@ -65,7 +65,7 @@ WITH sub AS (
         ped.fecha_pedido,
         ped.fecha_esperada,
         ped.fecha_entrega,
-        CONCAT(ped.fecha_esperada, '>', ped.fecha_entrega) AS fechas_comparation,
+        CONCAT(ped.fecha_esperada, ' > ', ped.fecha_entrega) AS fechas_comparation,
         DATEDIFF(ped.fecha_entrega, ped.fecha_esperada) AS dias_retraso,
         CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto) AS nombre_cliente
     FROM pedido ped
@@ -144,3 +144,47 @@ FROM OficinasEmpleados;
 ------------------------------------------------------
 
 -- Enunciado: Obtener la lista de empleados que actúan como jefes (tienen empleados a su cargo) junto con el número de subordinados que tienen y la ciudad de su oficina. Se debe usar un JOIN y un CTE.
+WITH JefSubOfi AS (
+    SELECT
+        sub.codigo_jefe,
+        COUNT(sub.codigo_empleado) AS num_subordinados
+    FROM empleado sub
+    WHERE sub.codigo_jefe IS NOT NULL
+    GROUP BY sub.codigo_jefe
+)
+SELECT
+    jef.codigo_empleado AS "Codigo Jefe",
+    COALESCE(CONCAT(jef.nombre, ' ', jef.apellido1, ' ', jef.apellido2), '') AS "Nombre Jefe",
+    JefSubOfi.num_subordinados AS "Numero Subordinados",
+    ofi.codigo_oficina AS "Codigo Oficina",
+    CONCAT(ofi.linea_direccion1, ' -', ofi.linea_direccion2, ', ', ofi.codigo_postal, ', ', ofi.ciudad, ', ', ofi.pais) AS "Dirección Oficina"
+FROM empleado jef
+INNER JOIN JefSubOfi
+    ON JefSubOfi.codigo_jefe = jef.codigo_empleado
+LEFT JOIN oficina ofi
+    ON ofi.codigo_oficina = jef.codigo_oficina
+ORDER BY JefSubOfi.num_subordinados DESC;
+
+------------------------------------------------------------
+-- Consulta 7 – Totales de pedidos y pagos por cliente:
+------------------------------------------------------------
+
+-- Enunciado: Para cada cliente, calcular el total monetario de sus pedidos (sumando el valor de cada detalle de pedido) y el total de pagos realizados, mostrando además la diferencia entre ambos totales. Se deben emplear un CTE y un  JOIN.
+WITH TotalPedidos (
+    SELECT
+        ped.codigo_cliente,
+        IFNULL(SUM(detped.cantidad * detped.precio_unidad), 0) AS total_monetario
+    FROM pedido ped
+    INNER JOIN detalle_pedido detped
+        ON detped.codigo_pedido = ped.codigo_pedido
+    GROUP BY detped.codigo_cliente
+),
+TotalPagos AS (
+    SELECT
+        pag.codigo_cliente,
+        COUNT(pag.codigo_cliente) AS total_pagos
+    FROM pago pag
+    GROUP BY pag.codigo_cliente
+)
+SELECT
+    
