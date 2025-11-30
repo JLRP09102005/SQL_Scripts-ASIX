@@ -1,4 +1,4 @@
--- Active: 1763026326945@@127.0.0.1@3306@jardineria
+-- Active: 1762272161423@@127.0.0.1@3306@jardineria
 USE jardineria;
 
 -----------------------------------------------------
@@ -170,14 +170,14 @@ ORDER BY JefSubOfi.num_subordinados DESC;
 ------------------------------------------------------------
 
 -- Enunciado: Para cada cliente, calcular el total monetario de sus pedidos (sumando el valor de cada detalle de pedido) y el total de pagos realizados, mostrando además la diferencia entre ambos totales. Se deben emplear un CTE y un  JOIN.
-WITH TotalPedidos (
+WITH TotalPedidos AS (
     SELECT
         ped.codigo_cliente,
-        IFNULL(SUM(detped.cantidad * detped.precio_unidad), 0) AS total_monetario
+        SUM(detped.cantidad * detped.precio_unidad) AS total_monetario
     FROM pedido ped
     INNER JOIN detalle_pedido detped
         ON detped.codigo_pedido = ped.codigo_pedido
-    GROUP BY detped.codigo_cliente
+    GROUP BY ped.codigo_cliente
 ),
 TotalPagos AS (
     SELECT
@@ -185,6 +185,55 @@ TotalPagos AS (
         COUNT(pag.codigo_cliente) AS total_pagos
     FROM pago pag
     GROUP BY pag.codigo_cliente
+),
+InfoCliente AS (
+    SELECT
+        cli.codigo_cliente,
+        cli.nombre_cliente,
+        cli.apellido_contacto
+    FROM cliente cli
 )
 SELECT
-    
+    totped.codigo_cliente AS "Codigo Cliente",
+    CONCAT(infcli.nombre_cliente, ' ', infcli.apellido_contacto) AS "Nombre Cliente",
+    IFNULL(totped.total_monetario, 0) AS "Total Monetario Pedidos",
+    IFNULL(totpag.total_pagos, 0) AS "Total de Pagos",
+    IFNULL((totped.total_monetario - totpag.total_pagos), 0) AS "Diferencia"
+FROM totalPedidos totped
+LEFT JOIN TotalPagos totpag
+    ON totpag.codigo_cliente = totped.codigo_cliente
+LEFT JOIN InfoCliente infcli
+    ON infcli.codigo_cliente = totped.codigo_cliente
+ORDER BY 
+    totped.total_monetario DESC,
+    totpag.total_pagos DESC;
+
+------------------------------------------------------------
+-- Consulta 8 – Productos más pedidos y total de ventas:
+------------------------------------------------------------
+
+-- Enunciado: Listar los productos que han sido pedidos en cantidad superior a 10 unidades (suma de las cantidades de la tabla detalle_pedido) y mostrar, además de su gama, el total de ventas (calculado como precio_unidad multiplicado por cantidad). Se debe utilizar un CTE.
+WITH UnidadesTotalVentas AS (
+    SELECT
+        detped.codigo_producto,
+        SUM(detped.cantidad) AS total_pedidos,
+        SUM(detped.precio_unidad * detped.cantidad) AS total_ventas
+    FROM detalle_pedido detped
+    GROUP BY detped.codigo_producto
+    HAVING total_pedidos > 10
+),
+InfoProducto AS (
+    SELECT
+        pro.codigo_producto,
+        pro.nombre,
+        pro.gama
+    FROM producto pro
+)
+SELECT
+    unitotven.codigo_producto AS "Codigo Producto",
+    infpro.nombre AS "Nombre Producto",
+    infpro.gama AS "Gama Producto",
+    unitotven.total_ventas AS "Total de Ventas"
+FROM UnidadesTotalVentas unitotven
+INNER JOIN InfoProducto infpro
+    ON infpro.codigo_producto = unitotven.codigo_producto;
