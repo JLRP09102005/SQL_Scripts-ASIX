@@ -237,3 +237,170 @@ SELECT
 FROM UnidadesTotalVentas unitotven
 INNER JOIN InfoProducto infpro
     ON infpro.codigo_producto = unitotven.codigo_producto;
+
+------------------------------------------------------------
+-- Consulta 9 – Productos más pedidos y total de ventas:
+------------------------------------------------------------
+
+-- Enunciado: Crear una vista final que combine información de pedidos, clientes y empleados (usando el representante de ventas de cada cliente) para calcular el tiempo promedio (en días) entre fecha_pedido y fecha_entrega para cada proveedor, considerando solo los pedidos que ya fueron entregados.
+WITH InfoPedidoProducto AS (
+    SELECT
+        ped.codigo_pedido,
+        ped.fecha_pedido,
+        ped.fecha_entrega,
+        ped.fecha_esperada,
+        CONCAT(ped.fecha_entrega, ' > ', ped.fecha_esperada) AS fecha_entrega_espera,
+        ped.estado,
+        ped.comentarios,
+        ped.codigo_cliente,
+        pro.proveedor
+    FROM pedido ped
+    INNER JOIN detalle_pedido detped
+        ON detped.codigo_pedido = ped.codigo_pedido
+    INNER JOIN producto pro
+        ON pro.codigo_producto = detped.codigo_producto
+    WHERE ped.estado = "Entregado"
+),
+Info_Cliente_Empleado AS (
+    SELECT
+        cli.codigo_cliente,
+        CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ' - ', cli.nombre_contacto) AS nombre_cliente,
+        cli.telefono,
+        cli.fax,
+        CONCAT(cli.linea_direccion1, ' ', cli.linea_direccion2, ' ', cli.ciudad, ' ', cli.pais, ' ', cli.codigo_postal) AS direccion_cliente,
+        cli.limite_credito,
+        cli.codigo_empleado_rep_ventas,
+        CONCAT(emp.nombre, ' ', emp.apellido1, ' ', emp.apellido2) AS nombre_empleado,
+        emp.extension,
+        emp.email,
+        emp.codigo_oficina,
+        emp.codigo_jefe,
+        emp.puesto
+    FROM cliente cli
+    LEFT JOIN empleado emp
+        ON emp.codigo_empleado = cli.codigo_empleado_rep_ventas
+),
+PromedioProveedor AS (
+    SELECT
+        infpedpro.proveedor,
+        ROUND(AVG(DATEDIFF(infpedpro.fecha_entrega, infpedpro.fecha_pedido)), 0) AS promedio_espera
+    FROM InfoPedidoProducto infpedpro
+    GROUP BY infpedpro.proveedor
+)
+SELECT
+    infpedpro.codigo_pedido AS "Codigo Pedido",
+    infpedpro.fecha_pedido AS "Fecha Pedido",
+    infpedpro.fecha_entrega_espera AS "Fecha Entrega > Esperada",
+    propro.proveedor AS "Proveedor",
+    propro.promedio_espera AS "Espera Promedio",
+    infpedpro.estado AS "Estado Pedido",
+    IFNULL(infpedpro.comentarios, "nada") AS "Comentarios",
+    infcliemp.codigo_cliente AS "Codigo Cliente",
+    infcliemp.nombre_cliente AS "Nombre Cliente",
+    infcliemp.telefono AS "Telefono Cliente",
+    infcliemp.fax AS "Fax",
+    COALESCE(infcliemp.direccion_cliente, '') AS "Direccion Cliente",
+    infcliemp.limite_credito AS "Limite de Credito",
+    infcliemp.codigo_empleado_rep_ventas AS "Codigo Empleado",
+    COALESCE(infcliemp.nombre_empleado, '') AS "Nombre Empleado",
+    infcliemp.extension AS "Extension",
+    infcliemp.email AS "Email",
+    infcliemp.codigo_oficina AS "Codigo Oficina",
+    infcliemp.codigo_jefe AS "Codigo Empleado Jefe",
+    infcliemp.puesto AS "Puesto"
+FROM InfoPedidoProducto infpedpro
+LEFT JOIN PromedioProveedor propro
+    ON propro.proveedor = infpedpro.proveedor
+INNER JOIN Info_Cliente_Empleado infcliemp
+    ON infcliemp.codigo_cliente = infpedpro.codigo_cliente
+ORDER BY infpedpro.codigo_pedido ASC;
+
+-- CORREGIDO POR IA
+-- WITH InfoPedidoProducto AS (
+--     SELECT
+--         ped.codigo_pedido,
+--         ped.fecha_pedido,
+--         ped.fecha_entrega,
+--         ped.fecha_esperada,
+--         CONCAT(ped.fecha_entrega, ' > ', ped.fecha_esperada) AS fecha_entrega_espera,
+--         ped.estado,
+--         ped.comentarios,
+--         ped.codigo_cliente,
+--         pro.proveedor
+--     FROM pedido ped
+--     INNER JOIN detalle_pedido detped
+--         ON detped.codigo_pedido = ped.codigo_pedido
+--     INNER JOIN producto pro
+--         ON pro.codigo_producto = detped.codigo_producto
+--     WHERE ped.estado = 'Entregado'
+--         AND ped.fecha_entrega IS NOT NULL  -- ✅ Mejor práctica
+-- ),
+-- PromedioProveedor AS (
+--     SELECT
+--         proveedor,
+--         ROUND(AVG(DATEDIFF(fecha_entrega, fecha_pedido)), 0) AS promedio_espera
+--     FROM InfoPedidoProducto
+--     GROUP BY proveedor
+-- ),
+-- InfoClienteEmpleado AS (
+--     SELECT
+--         cli.codigo_cliente,
+--         CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ' - ', cli.nombre_contacto) AS nombre_cliente,
+--         cli.telefono,
+--         cli.fax,
+--         CONCAT_WS(' ',  -- ✅ Maneja NULLs automáticamente
+--             cli.linea_direccion1,
+--             NULLIF(cli.linea_direccion2, ''),
+--             cli.ciudad,
+--             cli.pais,
+--             cli.codigo_postal
+--         ) AS direccion_cliente,
+--         cli.limite_credito,
+--         cli.codigo_empleado_rep_ventas,
+--         CONCAT_WS(' ',  -- ✅ Mejor que CONCAT para NULLs
+--             emp.nombre,
+--             emp.apellido1,
+--             NULLIF(emp.apellido2, '')
+--         ) AS nombre_empleado,
+--         emp.extension,
+--         emp.email,
+--         emp.codigo_oficina,
+--         emp.codigo_jefe,
+--         emp.puesto
+--     FROM cliente cli
+--     LEFT JOIN empleado emp
+--         ON emp.codigo_empleado = cli.codigo_empleado_rep_ventas
+-- )
+-- SELECT DISTINCT  -- ✅ Evita duplicados si hay varios productos por pedido
+--     ipp.codigo_pedido AS "Codigo Pedido",
+--     ipp.fecha_pedido AS "Fecha Pedido",
+--     ipp.fecha_entrega_espera AS "Fecha Entrega > Esperada",
+--     pp.promedio_espera AS "Espera Promedio",
+--     ipp.estado AS "Estado Pedido",
+--     IFNULL(ipp.comentarios, "Sin comentarios") AS "Comentarios",
+--     ipp.proveedor AS "Proveedor",
+--     ice.codigo_cliente AS "Codigo Cliente",
+--     ice.nombre_cliente AS "Nombre Cliente",
+--     ice.telefono AS "Telefono Cliente",
+--     ice.fax AS "Fax",
+--     ice.direccion_cliente AS "Direccion Cliente",  -- ✅ Ya no necesita COALESCE
+--     ice.limite_credito AS "Limite de Credito",
+--     ice.codigo_empleado_rep_ventas AS "Codigo Empleado",
+--     ice.nombre_empleado AS "Nombre Empleado",  -- ✅ Ya no necesita COALESCE
+--     ice.extension AS "Extension",
+--     ice.email AS "Email",
+--     ice.codigo_oficina AS "Codigo Oficina",
+--     ice.codigo_jefe AS "Codigo Empleado Jefe",
+--     ice.puesto AS "Puesto"
+-- FROM InfoPedidoProducto ipp
+-- LEFT JOIN PromedioProveedor pp
+--     ON pp.proveedor = ipp.proveedor
+-- INNER JOIN InfoClienteEmpleado ice
+--     ON ice.codigo_cliente = ipp.codigo_cliente
+-- ORDER BY ipp.codigo_pedido ASC;
+
+------------------------------------------------------------
+-- Consulta 10 – Clientes con límite de crédito bajo:
+------------------------------------------------------------
+
+-- Enunciado: Listar la información de los clientes cuyo límite de crédito es menor que el promedio del límite de crédito de todos los clientes en su mismo país. Se debe utilizar una subconsulta correlacionada.
