@@ -264,13 +264,13 @@ WITH InfoPedidoProducto AS (
 Info_Cliente_Empleado AS (
     SELECT
         cli.codigo_cliente,
-        CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ' - ', cli.nombre_contacto) AS nombre_cliente,
+        CONCAT_WS(' ', cli.nombre_cliente, cli.apellido_contacto, cli.nombre_contacto) AS nombre_cliente,
         cli.telefono,
         cli.fax,
-        CONCAT(cli.linea_direccion1, ' ', cli.linea_direccion2, ' ', cli.ciudad, ' ', cli.pais, ' ', cli.codigo_postal) AS direccion_cliente,
+        CONCAT_WS(', ', cli.linea_direccion1, cli.linea_direccion2, cli.ciudad, cli.pais, cli.codigo_postal) AS direccion_cliente,
         cli.limite_credito,
         cli.codigo_empleado_rep_ventas,
-        CONCAT(emp.nombre, ' ', emp.apellido1, ' ', emp.apellido2) AS nombre_empleado,
+        CONCAT_WS(' ', emp.nombre, emp.apellido1, emp.apellido2) AS nombre_empleado,
         emp.extension,
         emp.email,
         emp.codigo_oficina,
@@ -404,3 +404,23 @@ ORDER BY infpedpro.codigo_pedido ASC;
 ------------------------------------------------------------
 
 -- Enunciado: Listar la información de los clientes cuyo límite de crédito es menor que el promedio del límite de crédito de todos los clientes en su mismo país. Se debe utilizar una subconsulta correlacionada.
+SELECT
+    cli.codigo_cliente AS "Codigo Cliente",
+    CONCAT_WS(' ', cli.nombre_cliente, cli.apellido_contacto, cli.nombre_contacto) AS "Nombre Cliente",
+    cli.telefono AS "Num Telefono",
+    cli.fax AS "Fax",
+    CONCAT_WS(', ', cli.linea_direccion1, cli.linea_direccion2, cli.ciudad, cli.region, cli.pais, cli.codigo_postal) AS "Direccion Cliente",
+    cli.codigo_empleado_rep_ventas AS "Codigo Representante Ventas",
+    cli.limite_credito AS "Limite de Credito"
+FROM cliente cli
+WHERE cli.limite_credito < (
+    SELECT AVG(cli1.limite_credito)
+    FROM cliente cli1
+    WHERE cli1.pais = cli.pais
+);
+
+------------------------------------------------------------
+-- Consulta 11 – Reporte por oficina de ventas a tiempo:
+------------------------------------------------------------
+
+-- Enunciado: Generar un reporte que para cada oficina muestre el total de ventas, el total de pedidos y el promedio de ventas por pedido. Las ventas se calculan como la suma de (precio_unidad multiplicado por cantidad) de los detalles de pedido, considerando solo aquellos pedidos que fueron entregados a tiempo (donde fecha_entrega es menor o igual que fecha_esperada). Se deben usar múltiples CTE’s.
