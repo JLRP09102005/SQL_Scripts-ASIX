@@ -518,3 +518,25 @@ FROM ResumenOficina ro
 ------------------------------------------------------------------
 
 -- Enunciado: Listar, para cada gama de producto, los 5 productos con mayor margen de ganancia promedio (calculado como la diferencia entre precio_venta y precio_proveedor). Se debe utilizar un CTE.
+WITH RankingGama AS (
+    SELECT
+        pro.gama,
+        pro.codigo_producto,
+        pro.nombre,
+        (pro.precio_venta - pro.precio_proveedor) AS margen_ganancia,
+        ROW_NUMBER() OVER (PARTITION BY pro.gama ORDER BY margen_ganancia DESC) AS top_num
+    FROM producto pro
+)
+SELECT
+    rg.gama AS "Gama Producto",
+    rg.codigo_producto AS "Codigo Producto",
+    rg.nombre AS "Nombre Producto",
+    rg.top_num AS "Position in TOP"
+FROM RankingGama rg
+WHERE rg.top_num <= 5
+
+------------------------------------------------------------------
+-- Consulta 13 – Ranking de clientes por índice de actividad:
+------------------------------------------------------------------
+
+-- Enunciado: Generar un ranking de clientes basado en su actividad, donde se sume el total de pedidos y el total de pagos (aplicando una ponderación, por ejemplo, 0.6 para pedidos y 0.4 para pagos) para calcular un “índice de actividad”. Mostrar solo aquellos clientes cuyo índice supere un valor específico (por ejemplo, 5). Se deben emplear subconsultas y JOIN’s.
