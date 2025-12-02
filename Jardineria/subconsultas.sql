@@ -540,3 +540,43 @@ WHERE rg.top_num <= 5
 ------------------------------------------------------------------
 
 -- Enunciado: Generar un ranking de clientes basado en su actividad, donde se sume el total de pedidos y el total de pagos (aplicando una ponderación, por ejemplo, 0.6 para pedidos y 0.4 para pagos) para calcular un “índice de actividad”. Mostrar solo aquellos clientes cuyo índice supere un valor específico (por ejemplo, 5). Se deben emplear subconsultas y JOIN’s.
+SELECT
+    ROW_NUMBER() OVER (ORDER BY IndiceActividad DESC) AS "Position Ranking",
+    cli.codigo_cliente AS "Codigo Cliente",
+    CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ', ', cli.nombre_contacto) AS "Nombre Cliente",
+    ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) AS IndiceActividad
+FROM cliente cli
+LEFT JOIN (
+    SELECT
+        cli1.codigo_cliente,
+        COUNT(DISTINCT ped.codigo_pedido) AS num_pedidos,
+        COUNT(DISTINCT pag.codigo_cliente) AS num_pagos
+    FROM pedido ped
+    INNER JOIN cliente cli1 ON cli1.codigo_cliente = ped.codigo_cliente
+    INNER JOIN pago pag ON pag.codigo_cliente = cli1.codigo_cliente
+    GROUP BY cli1.codigo_cliente
+) ci
+    ON ci.codigo_cliente = cli.codigo_cliente
+WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5
+
+--IA Code
+-- SELECT
+--     ROW_NUMBER() OVER (ORDER BY ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) DESC) AS "Position Ranking",
+--     cli.codigo_cliente AS "Codigo Cliente",
+--     CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ', ', cli.nombre_contacto) AS "Nombre Cliente",
+--     ci.num_pedidos,
+--     ci.num_pagos,
+--     ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) AS IndiceActividad
+-- FROM cliente cli
+-- LEFT JOIN (
+--     SELECT
+--         cli1.codigo_cliente,
+--         COUNT(DISTINCT ped.codigo_pedido) AS num_pedidos,
+--         COUNT(pag.codigo_cliente) AS num_pagos
+--     FROM cliente cli1
+--     LEFT JOIN pedido ped ON cli1.codigo_cliente = ped.codigo_cliente
+--     LEFT JOIN pago pag ON pag.codigo_cliente = cli1.codigo_cliente
+--     GROUP BY cli1.codigo_cliente  -- ✅ Corregido
+-- ) ci ON ci.codigo_cliente = cli.codigo_cliente
+-- WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5  -- ✅ WHERE en lugar de HAVING
+-- ORDER BY IndiceActividad DESC;
