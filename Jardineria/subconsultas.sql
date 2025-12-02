@@ -424,3 +424,97 @@ WHERE cli.limite_credito < (
 ------------------------------------------------------------
 
 -- Enunciado: Generar un reporte que para cada oficina muestre el total de ventas, el total de pedidos y el promedio de ventas por pedido. Las ventas se calculan como la suma de (precio_unidad multiplicado por cantidad) de los detalles de pedido, considerando solo aquellos pedidos que fueron entregados a tiempo (donde fecha_entrega es menor o igual que fecha_esperada). Se deben usar múltiples CTE’s.
+WITH TotalVentasPedidosOficina AS (
+    SELECT
+        detped.codigo_pedido,
+        detped.cantidad,
+        detped.precio_unidad,
+        SUM(detped.cantidad * detped.precio_unidad) AS venta_pedido,
+        ofi.codigo_oficina,
+        CONCAT_WS(', ', ofi.linea_direccion1, ofi.linea_direccion2, ofi.ciudad, ofi.region, ofi.pais, ofi.codigo_postal) AS direccion_oficina,
+        ofi.telefono
+    FROM detalle_pedido detped
+    INNER JOIN pedido ped
+        ON ped.codigo_pedido = detped.codigo_pedido
+    INNER JOIN cliente cli
+        ON cli.codigo_cliente = ped.codigo_cliente
+    INNER JOIN empleado emp
+        ON emp.codigo_empleado = cli.codigo_empleado_rep_ventas
+    INNER JOIN oficina ofi
+        ON ofi.codigo_oficina = emp.codigo_oficina
+    WHERE ped.fecha_entrega <= ped.fecha_esperada
+    GROUP BY 
+        ofi.codigo_oficina,
+        ped.codigo_pedido
+),
+ResumenOficina AS (
+    SELECT
+        tvpo.codigo_oficina,
+        tvpo.direccion_oficina,
+        tvpo.telefono,
+        ROUND(SUM(venta_pedido), 0) AS total_ventas,
+        ROUND(AVG(tvpo.venta_pedido), 2) AS promedio_ventas_pedido,
+        COUNT(*) AS total_pedidos
+    FROM TotalVentasPedidosOficina tvpo
+    GROUP BY
+        tvpo.codigo_oficina,
+        tvpo.direccion_oficina,
+        tvpo.telefono
+)
+SELECT
+    ro.codigo_oficina AS "Codigo Oficina",
+    ro.direccion_oficina AS "Direccion Oficina",
+    ro.telefono AS "Telefono Oficina",
+    ro.total_pedidos AS "Total Pedidos",
+    ro.total_ventas AS "Total Ventas",
+    ro.promedio_ventas_pedido AS "Promedio Ventas por Pedido"
+FROM ResumenOficina ro
+
+-- Consulta anterior pendiente a mejorar:
+-- WITH TotalVentasPedidosOficina AS (
+--     SELECT
+--         detped.codigo_pedido,
+--         detped.cantidad,
+--         detped.precio_unidad,
+--         ROUND(SUM(detped.cantidad * detped.precio_unidad), 0) AS total_ventas,
+--         COUNT(DISTINCT ped.codigo_pedido) AS total_pedidos,
+--         ofi.codigo_oficina,
+--         CONCAT_WS(', ', ofi.linea_direccion1, ofi.linea_direccion2, ofi.ciudad, ofi.region, ofi.pais, ofi.codigo_postal) AS direccion_oficina,
+--         ofi.telefono
+--     FROM detalle_pedido detped
+--     INNER JOIN pedido ped
+--         ON ped.codigo_pedido = detped.codigo_pedido
+--     INNER JOIN cliente cli
+--         ON cli.codigo_cliente = ped.codigo_cliente
+--     INNER JOIN empleado emp
+--         ON emp.codigo_empleado = cli.codigo_empleado_rep_ventas
+--     INNER JOIN oficina ofi
+--         ON ofi.codigo_oficina = emp.codigo_oficina
+--     WHERE ped.fecha_entrega <= ped.fecha_esperada
+--     GROUP BY ofi.codigo_oficina
+-- ),
+-- PromedioVentasPedido AS (
+--     SELECT
+--         ped.codigo_pedido,
+--         AVG(detped.cantidad * detped.precio_unidad) AS promedio_ventas_pedido
+--     FROM pedido ped
+--     INNER JOIN detalle_pedido detped
+--         ON detped.codigo_pedido = ped.codigo_pedido
+--     GROUP BY ped.codigo_pedido
+-- )
+-- SELECT
+--     tvpo.codigo_oficina AS "Codigo Oficina",
+--     tvpo.direccion_oficina AS "Direccion Oficina",
+--     tvpo.telefono AS "Telefono Oficina",
+--     tvpo.total_ventas AS "Total Ventas",
+--     tvpo.total_pedidos AS "Total Pedidos",
+--     pvp.promedio_ventas_pedido AS "Promedio Ventas por Pedido"
+-- FROM TotalVentasPedidosOficina tvpo
+-- LEFT JOIN PromedioVentasPedido pvp
+--     ON pvp.codigo_pedido = tvpo.codigo_pedido
+
+------------------------------------------------------------------
+-- Consulta 12 – Ranking de productos por margen en cada gama:
+------------------------------------------------------------------
+
+-- Enunciado: Listar, para cada gama de producto, los 5 productos con mayor margen de ganancia promedio (calculado como la diferencia entre precio_venta y precio_proveedor). Se debe utilizar un CTE.
