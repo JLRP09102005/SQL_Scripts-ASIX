@@ -586,3 +586,32 @@ WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5
 -------------------------------------------------------------------------
 
 -- Enunciado: Identificar los empleados que, como representantes de ventas, tienen una diferencia mayor a 5 días entre el primer pedido asignado y el último pedido asignado. Se debe utilizar un CTE y funciones de agregación en varias etapas.
+WITH CalculoDias AS (
+    SELECT
+        emp.codigo_empleado,
+        CONCAT_WS(' ', emp.nombre, emp.apellido1, emp.apellido2) AS nombre_empleado,
+        emp.extension,
+        emp.email,
+        emp.codigo_oficina,
+        emp.codigo_jefe,
+        emp.puesto,
+        MIN(ped.fecha_pedido) AS primer_pedido,
+        MAX(ped.fecha_pedido) AS ultimo_pedido
+    FROM pedido ped
+    INNER JOIN cliente cli ON cli.codigo_cliente = ped.codigo_cliente
+    LEFT JOIN empleado emp ON emp.codigo_empleado = cli.codigo_empleado_rep_ventas
+    GROUP BY emp.codigo_empleado
+)
+SELECT
+    TIMESTAMPDIFF(DAY, cd.primer_pedido, cd.ultimo_pedido) AS "Diferencia Dias",
+    cd.codigo_empleado AS "Codigo Empleado",
+    COALESCE(cd.nombre_empleado, '') AS "Nombre Empleado",
+    cd.extension AS "Extension",
+    cd.email AS "Email",
+    cd.codigo_oficina AS "Codigo Oficina",
+    cd.codigo_jefe AS "Codigo Jefe",
+    cd.puesto AS "Puesto"
+FROM CalculoDias cd
+WHERE TIMESTAMPDIFF(DAY, cd.primer_pedido, cd.ultimo_pedido) > 5
+    AND cd.puesto = "Representante Ventas"
+ORDER BY TIMESTAMPDIFF(DAY, cd.primer_pedido, cd.ultimo_pedido) DESC;
