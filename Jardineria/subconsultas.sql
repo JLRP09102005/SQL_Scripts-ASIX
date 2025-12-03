@@ -580,3 +580,9 @@ WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5
 -- ) ci ON ci.codigo_cliente = cli.codigo_cliente
 -- WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5  -- ✅ WHERE en lugar de HAVING
 -- ORDER BY IndiceActividad DESC;
+
+-------------------------------------------------------------------------
+-- Consulta 14 – Diferencia entre primer y último pedido por empleado:
+-------------------------------------------------------------------------
+
+-- Enunciado: Identificar los empleados que, como representantes de ventas, tienen una diferencia mayor a 5 días entre el primer pedido asignado y el último pedido asignado. Se debe utilizar un CTE y funciones de agregación en varias etapas.
