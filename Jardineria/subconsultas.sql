@@ -615,3 +615,228 @@ FROM CalculoDias cd
 WHERE TIMESTAMPDIFF(DAY, cd.primer_pedido, cd.ultimo_pedido) > 5
     AND cd.puesto = "Representante Ventas"
 ORDER BY TIMESTAMPDIFF(DAY, cd.primer_pedido, cd.ultimo_pedido) DESC;
+
+--------------------------------------------------------------
+-- Consulta 15 – Vista consolidada de la base de datos:
+--------------------------------------------------------------
+
+-- Enunciado: Diseñar una consulta compleja que genere una vista final consolidada con la información de todas las tablas: oficina, empleado, cliente, pedido, producto, detalle_pedido y pago. La vista deberá incluir cálculos de márgenes, diferencias en fechas (por ejemplo, días de entrega) y totales por categorías (como ventas totales por pedido). Se deben emplear múltiples CTE’s, subconsultas, JOIN’s y operaciones de tratamiento de datos.
+WITH InformacionClientes AS (
+    SELECT
+        cli.codigo_cliente,
+        CONCAT(cli.nombre_cliente, ' ', cli.apellido_contacto, ', ', cli.nombre_contacto) AS nombre_cliente,
+        cli.telefono,
+        cli.fax,
+        CONCAT_WS(', ', cli.linea_direccion2, cli.linea_direccion1, cli.ciudad, cli.region, cli.pais, cli.codigo_postal) AS direccion_cliente,
+        cli.codigo_empleado_rep_ventas,
+        cli.limite_credito
+    FROM cliente cli
+),
+InformacionEmpleados AS (
+    SELECT
+        emp.codigo_empleado,
+        CONCAT_WS(' ', emp.nombre, emp.apellido1, emp.apellido2) AS nombre_empleado,
+        emp.extension,
+        emp.email,
+        emp.codigo_oficina,
+        emp.codigo_jefe,
+        emp.puesto
+    FROM empleado emp
+),
+InformacionOficinas AS (
+    SELECT
+        ofi.codigo_oficina,
+        CONCAT_WS(', ', ofi.linea_direccion2, ofi.linea_direccion1, ofi.ciudad, ofi.region, ofi.pais, ofi.codigo_postal) AS direccion_oficina,
+        ofi.telefono
+    FROM oficina ofi
+),
+InformacionPagos AS (
+    SELECT
+        pag.codigo_cliente,
+        pag.forma_pago,
+        pag.id_transaccion,
+        pag.fecha_pago,
+        pag.total
+    FROM pago pag
+),
+InformacionPedidos AS (
+    SELECT
+        ped.codigo_pedido,
+        CONCAT_WS('/', ped.fecha_pedido, ped.fecha_esperada, ped.fecha_entrega) AS fechas_serial,
+        GREATEST(TIMESTAMPDIFF(DAY, ped.fecha_esperada, ped.fecha_entrega), 0) AS dias_retraso,
+        ped.estado,
+        IFNULL(ped.comentarios, "no comentarios") AS comentarios,
+        ped.codigo_cliente
+    FROM pedido ped
+),
+InformacionDetallesPedidos AS (
+    SELECT
+        detped.codigo_pedido,
+        detped.codigo_producto,
+        detped.cantidad,
+        detped.precio_unidad,
+        detped.numero_linea,
+        (detped.cantidad * detped.precio_unidad) AS precio_pedido_total
+    FROM detalle_pedido detped
+),
+InformacionProductos AS (
+    SELECT
+        pro.codigo_producto,
+        pro.nombre,
+        pro.gama,
+        pro.dimensiones,
+        pro.proveedor,
+        pro.descripcion,
+        pro.cantidad_en_stock,
+        pro.precio_venta,
+        pro.precio_proveedor,
+        (pro.precio_venta - pro.precio_proveedor) AS margen_ganancia_producto
+    FROM producto pro
+),
+InformacionGamaProductos AS (
+    SELECT
+        gampro.gama,
+        gampro.descripcion_texto,
+        gampro.descripcion_html,
+        gampro.imagen
+    FROM gama_producto gampro
+),
+TotalPorPedido AS (
+    SELECT
+        iped.codigo_pedido,
+        SUM(idp.precio_pedido_total) AS total_por_pedidos
+    FROM InformacionPedidos iped
+    LEFT JOIN InformacionDetallesPedidos idp ON idp.codigo_pedido = iped.codigo_pedido
+    GROUP BY iped.codigo_pedido
+)
+SELECT
+    icli.codigo_cliente AS "Codigo Cliente",
+    icli.nombre_cliente AS "Nombre Cliente",
+    icli.telefono AS "Telefono",
+    icli.fax AS "Fax",
+    icli.direccion_cliente AS "Direccion Cliente",
+    icli.limite_credito AS "Limite Credito",
+
+    iemp.codigo_empleado AS "Codigo Empleado",
+    iemp.nombre_empleado AS "Nombre Empleado",
+    iemp.extension AS "Extension",
+    iemp.email AS "Email",
+    iemp.codigo_jefe AS "Codigo Jefe",
+    iemp.puesto AS "Puesto",
+
+    iofi.codigo_oficina AS "Codigo Oficina",
+    iofi.direccion_oficina AS "Direccion Oficina",
+    iofi.telefono AS "Telefono",
+
+    ipag.forma_pago AS "Forma de Pago",
+    ipag.id_transaccion AS "Id Transaccion",
+    ipag.fecha_pago AS "Fecha Pago",
+    ipag.total AS "Total Pago",
+
+    iped.codigo_pedido AS "Codigo Pedido",
+    iped.fechas_serial AS "Pedido-Espera-Entrega",
+    IFNULL(iped.dias_retraso, 0) AS "Dias Retraso",
+    iped.estado AS "Estado",
+    iped.comentarios AS "Comentarios",
+
+    totped.total_por_pedidos AS "Total Por Pedido",
+
+    idetped.cantidad AS "Cantidad",
+    idetped.precio_unidad AS "Precio Unidad",
+    idetped.numero_linea AS "Numero Linea",
+    idetped.precio_pedido_total AS "Total",
+
+    ipro.codigo_producto AS "Codigo Producto",
+    ipro.nombre AS "Nombre Producto",
+    ipro.dimensiones AS "Dimensiones",
+    ipro.proveedor AS "Proveedor",
+    ipro.descripcion AS "Descripcion",
+    ipro.cantidad_en_stock AS "Stock",
+    ipro.precio_venta AS "Precio Venta",
+    ipro.precio_proveedor AS "Precio Proveedor",
+    ipro.margen_ganancia_producto AS "Margen de Ganancia",
+
+    igampro.gama AS "Gama Producto",
+    IFNULL(igampro.descripcion_texto, "No Descripcion Texto") AS "Descripcion Texto",
+    IFNULL(igampro.descripcion_html, "No Descripcion HTML") AS "Descripcion HTML",
+    IFNULL(igampro.imagen, "No Imagen Gama") AS "Imagen Gama"
+FROM InformacionClientes icli
+LEFT JOIN InformacionEmpleados iemp ON iemp.codigo_empleado = icli.codigo_empleado_rep_ventas
+LEFT JOIN InformacionOficinas iofi ON iofi.codigo_oficina = iemp.codigo_oficina
+LEFT JOIN InformacionPagos ipag ON ipag.codigo_cliente = icli.codigo_cliente
+LEFT JOIN InformacionPedidos iped ON iped.codigo_cliente = icli.codigo_cliente
+LEFT JOIN InformacionDetallesPedidos idetped ON idetped.codigo_pedido = iped.codigo_pedido
+LEFT JOIN InformacionProductos ipro ON ipro.codigo_producto = idetped.codigo_producto
+LEFT JOIN InformacionGamaProductos igampro ON igampro.gama = ipro.gama
+LEFT JOIN TotalPorPedido totped ON totped.codigo_pedido = iped.codigo_pedido
+
+UNION ALL
+
+SELECT
+    icli.codigo_cliente AS "Codigo Cliente",
+    icli.nombre_cliente AS "Nombre Cliente",
+    icli.telefono AS "Telefono",
+    icli.fax AS "Fax",
+    icli.direccion_cliente AS "Direccion Cliente",
+    icli.limite_credito AS "Limite Credito",
+
+    iemp.codigo_empleado AS "Codigo Empleado",
+    iemp.nombre_empleado AS "Nombre Empleado",
+    iemp.extension AS "Extension",
+    iemp.email AS "Email",
+    iemp.codigo_jefe AS "Codigo Jefe",
+    iemp.puesto AS "Puesto",
+
+    iofi.codigo_oficina AS "Codigo Oficina",
+    iofi.direccion_oficina AS "Direccion Oficina",
+    iofi.telefono AS "Telefono",
+
+    ipag.forma_pago AS "Forma de Pago",
+    ipag.id_transaccion AS "Id Transaccion",
+    ipag.fecha_pago AS "Fecha Pago",
+    ipag.total AS "Total Pago",
+
+    iped.codigo_pedido AS "Codigo Pedido",
+    iped.fechas_serial AS "Pedido-Espera-Entrega",
+    IFNULL(iped.dias_retraso, 0) AS "Dias Retraso",
+    iped.estado AS "Estado",
+    iped.comentarios AS "Comentarios",
+
+    totped.total_por_pedidos AS "Total Por Pedido",
+
+    idetped.cantidad AS "Cantidad",
+    idetped.precio_unidad AS "Precio Unidad",
+    idetped.numero_linea AS "Numero Linea",
+    idetped.precio_pedido_total AS "Total",
+
+    ipro.codigo_producto AS "Codigo Producto",
+    ipro.nombre AS "Nombre Producto",
+    ipro.dimensiones AS "Dimensiones",
+    ipro.proveedor AS "Proveedor",
+    ipro.descripcion AS "Descripcion",
+    ipro.cantidad_en_stock AS "Stock",
+    ipro.precio_venta AS "Precio Venta",
+    ipro.precio_proveedor AS "Precio Proveedor",
+    ipro.margen_ganancia_producto AS "Margen de Ganancia",
+
+    igampro.gama AS "Gama Producto",
+    IFNULL(igampro.descripcion_texto, "No Descripcion Texto") AS "Descripcion Texto",
+    IFNULL(igampro.descripcion_html, "No Descripcion HTML") AS "Descripcion HTML",
+    IFNULL(igampro.imagen, "No Imagen Gama") AS "Imagen Gama"
+FROM InformacionClientes icli
+RIGHT JOIN InformacionEmpleados iemp ON iemp.codigo_empleado = icli.codigo_empleado_rep_ventas
+RIGHT JOIN InformacionOficinas iofi ON iofi.codigo_oficina = iemp.codigo_oficina
+RIGHT JOIN InformacionPagos ipag ON ipag.codigo_cliente = icli.codigo_cliente
+RIGHT JOIN InformacionPedidos iped ON iped.codigo_cliente = icli.codigo_cliente
+RIGHT JOIN InformacionDetallesPedidos idetped ON idetped.codigo_pedido = iped.codigo_pedido
+RIGHT JOIN InformacionProductos ipro ON ipro.codigo_producto = idetped.codigo_producto
+RIGHT JOIN InformacionGamaProductos igampro ON igampro.gama = ipro.gama
+RIGHT JOIN TotalPorPedido totped ON totped.codigo_pedido = iped.codigo_pedido;
+
+--IA
+-- GREATEST(TIMESTAMPDIFF(DAY, fecha_esperada, fecha_entrega), 0) AS dias_retraso_no_negativo
+
+-- CASE
+--   WHEN TIMESTAMPDIFF(DAY, fecha_esperada, fecha_entrega) < 0 THEN 0
+--   ELSE TIMESTAMPDIFF(DAY, fecha_esperada, fecha_entrega)
+-- END AS dias_retraso_no_negativo
