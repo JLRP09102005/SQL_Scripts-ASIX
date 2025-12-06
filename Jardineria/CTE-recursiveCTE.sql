@@ -91,9 +91,10 @@ from Categoria_SubCategorias csc;
 --         c.id,
 --         c.nombre,
 --         c.padre_id,
---         0 AS nivel
+--         0 AS nivel,
+--         CAST(c.id AS CHAR(50)) AS path
 --     FROM categorias c
---     WHERE c.id = 1
+--     WHERE c.padre_id IS NULL
 
 --     UNION ALL
 
@@ -101,15 +102,125 @@ from Categoria_SubCategorias csc;
 --         c1.id,
 --         c1.nombre,
 --         c1.padre_id,
---         csc.nivel + 1 AS nivel
+--         csc.nivel + 1 AS nivel,
+--         CONCAT(csc.path, '-', c1.id) AS path
 --     FROM categorias c1
 --     INNER JOIN Categoria_SubCategorias csc
 --         ON c1.padre_id = csc.id
 -- )
 -- SELECT
---     csc.id,
---     csc.padre_id,
---     csc.nivel,
---     CONCAT(REPEAT('    ', csc.nivel), '↳ ', csc.nombre) AS arbol
--- FROM Categoria_SubCategorias csc
--- ORDER BY csc.nivel, csc.id;
+--     id,
+--     padre_id,
+--     nivel,
+--     CONCAT(REPEAT('    ', nivel), '↳ ', nombre) AS arbol
+-- FROM Categoria_SubCategorias
+-- ORDER BY path;
+
+
+-----------------------
+-- Consulta 4
+-----------------------
+
+-- Muestra la jerarquía completa de un proyecto con ID=5, desde el proyecto raíz hasta el más específico (ejemplo: ProyectoPadre → Subproyecto → Tarea).
+WITH RECURSIVE JerarquiaProyectos AS (
+    SELECT
+        pro.id,
+        pro.nombre,
+        pro.proyecto_padre_id,
+        0 AS nivel,
+        CAST(pro.id AS VARCHAR(50)) AS path
+    FROM proyectos pro
+    WHERE pro.id = 1
+
+    UNION ALL
+
+    SELECT
+        pro1.id,
+        pro1.nombre,
+        pro1.proyecto_padre_id,
+        (jp.nivel + 1) AS nivel,
+        CONCAT(jp.path, '-', pro1.id) AS path
+    FROM proyectos pro1
+    INNER JOIN JerarquiaProyectos jp ON pro1.proyecto_padre_id = jp.id
+),
+TareasAsociadas AS (
+    SELECT
+        tar.id,
+        tar.nombre,
+        tar.proyecto_id
+    FROM tareas tar
+    INNER JOIN JerarquiaProyectos jp ON jp.id = tar.proyecto_id
+)
+SELECT
+    jp.id AS "Id Proyecto",
+    jp.nombre AS "Nombre Proyecto",
+    jp.proyecto_padre_id AS "Proyecto Padre Id",
+    CONCAT(REPEAT('  ', jp.nivel), '↳ ', jp.nombre) AS "Jerarquia",
+    ta.id AS "Id Tarea",
+    ta.nombre AS "Nombre Tarea",
+    ta.proyecto_id AS "Proyecto Id"
+FROM JerarquiaProyectos jp
+LEFT JOIN TareasAsociadas ta ON ta.proyecto_id = jp.id
+ORDER BY jp.path;
+
+WITH RECURSIVE JerarquiaProyectos AS (
+    SELECT
+        pro.id,
+        pro.nombre,
+        pro.proyecto_padre_id,
+        0 AS nivel,
+        CAST(pro.id AS VARCHAR(50)) AS path
+    FROM proyectos pro
+    WHERE pro.id = 1
+
+    UNION ALL
+
+    SELECT
+        pro1.id,
+        pro1.nombre,
+        pro1.proyecto_padre_id,
+        (jp.nivel + 1) AS nivel,
+        CONCAT(jp.path, '-', pro1.id) AS path
+    FROM proyectos pro1
+    INNER JOIN JerarquiaProyectos jp ON pro1.proyecto_padre_id = jp.id
+),
+TareasAsociadas AS (
+    SELECT
+        tar.id,
+        tar.nombre,
+        tar.proyecto_id,
+        (jp.nivel + 1) AS nivel,
+        CONCAT(jp.path, '-', tar.id) AS path
+    FROM tareas tar
+    INNER JOIN JerarquiaProyectos jp ON jp.id = tar.proyecto_id
+),
+JerarquiaCompleta AS (
+    SELECT
+        jp.id,
+        jp.nombre,
+        jp.proyecto_padre_id,
+        jp.nivel,
+        jp.path,
+        "Proyecto" AS tipo
+    FROM JerarquiaProyectos jp
+
+    UNION ALL
+
+    SELECT
+        ta.id,
+        ta.nombre,
+        ta.proyecto_id,
+        ta.nivel,
+        ta.path,
+        "Tarea" AS tipo
+    FROM TareasAsociadas ta
+)
+SELECT
+    jc.id AS "Id",
+    jc.nombre AS "Nombre",
+    jc.proyecto_padre_id AS "Proyecto Padre",
+    jc.nivel AS "Nivel",
+    CONCAT(REPEAT('  ', jc.nivel), '↳ ', jc.nombre) AS "Jerarquia",
+    jc.tipo AS "Tipo"
+FROM JerarquiaCompleta jc
+ORDER BY jc.path
