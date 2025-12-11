@@ -192,3 +192,70 @@ LEFT JOIN ClientesPorEmpleado cpe ON cpe.codigo_empleado_rep_ventas = jv.codigo_
 ORDER BY
     jv.nivel,
     jv.nombre_completo;
+
+-- 6. Ruta completa de productos a traves de las categorias (anidadas con subcategorias)
+WITH RECURSIVE CategoriasProductos AS (
+    SELECT
+        p.codigo_producto,
+        p.nombre,
+        p.gama,
+        p.precio_venta,
+        CAST(
+            CONCAT(UPPER(p.gama), ' -- ', p.nombre) AS CHAR(500)
+        ) as ruta_categoria,
+        1 AS nivel,
+        p.cantidad_en_stock
+    FROM producto p
+
+    UNION ALL
+
+    SELECT
+        cp.codigo_producto,
+        cp.nombre,
+        cp.gama,
+        cp.precio_venta,
+        CAST(
+            CONCAT(
+                cp.ruta_categoria, ' | ', 
+                CASE 
+                    WHEN cp.precio_venta < 50 THEN "Econommico"
+                    WHEN cp.precio_venta BETWEEN 50 AND 200 THEN "Estandar"
+                    WHEN cp.precio_venta BETWEEN 201 AND 500 THEN "Premium" 
+                    ELSE  "Lujo"
+                END,
+                " (Stock: ", cp.cantidad_en_stock, ")"
+            ) AS CHAR(500)
+        ) AS ruta_categoria,
+        (cp.nivel + 1) AS nivel,
+        cp.cantidad_en_stock
+    FROM CategoriasProductos cp
+    WHERE cp.nivel = 1
+),
+ResumenVentas AS (
+    SELECT
+        dp.codigo_producto,
+        SUM(dp.cantidad) AS cantidad_vendida,
+        SUM(dp.cantidad * dp.precio_unidad) AS valor_total
+    FROM detalle_pedido dp
+    GROUP BY dp.codigo_producto
+)
+SELECT
+    cp.nivel,
+    cp.ruta_categoria AS "Ruta Completa",
+    cp.gama,
+    cp.precio_venta AS "Precio Unitario",
+    cp.cantidad_en_stock AS "Stock Disponible",
+    COALESCE(rv.cantidad_vendida, 0) AS "Unidades vendidas totales",
+    COALESCE(rv.valor_total, 0) AS "Valor total en ventas",
+    CASE 
+        WHEN cp.cantidad_en_stock < 10 THEN "Stock Bajo"
+        WHEN cp.cantidad_en_stock BETWEEN 10 AND 50 THEN "Stock Medio"
+        ELSE  "Stock Alto"
+    END AS "Estado del inventario"
+FROM CategoriasProductos cp
+LEFT JOIN ResumenVentas rv ON rv.codigo_producto = cp.codigo_producto
+WHERE cp.nivel = 2
+ORDER BY
+    gama,
+    cp.precio_venta DESC,
+    cp.nombre;
