@@ -468,7 +468,7 @@ SELECT
     ro.total_pedidos AS "Total Pedidos",
     ro.total_ventas AS "Total Ventas",
     ro.promedio_ventas_pedido AS "Promedio Ventas por Pedido"
-FROM ResumenOficina ro
+FROM ResumenOficina ro;
 
 -- Consulta anterior pendiente a mejorar:
 -- WITH TotalVentasPedidosOficina AS (
@@ -533,7 +533,7 @@ SELECT
     rg.nombre AS "Nombre Producto",
     rg.top_num AS "Position in TOP"
 FROM RankingGama rg
-WHERE rg.top_num <= 5
+WHERE rg.top_num <= 5;
 
 ------------------------------------------------------------------
 -- Consulta 13 – Ranking de clientes por índice de actividad:
@@ -557,7 +557,7 @@ LEFT JOIN (
     GROUP BY cli1.codigo_cliente
 ) ci
     ON ci.codigo_cliente = cli.codigo_cliente
-WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5
+WHERE ((ci.num_pedidos * 0.6) + (ci.num_pagos * 0.4)) > 5;
 
 --IA Code
 -- SELECT
