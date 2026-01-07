@@ -1,3 +1,4 @@
+-- Active: 1762272161423@@127.0.0.1@3306@pokebase
 CREATE DATABASE IF NOT EXISTS pokebase;
 USE pokebase;
 
