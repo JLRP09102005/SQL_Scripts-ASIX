@@ -1,4 +1,6 @@
 -- Active: 1762272161423@@127.0.0.1@3306@pokebase
+USE pokebase;
+
 WITH RECURSIVE PokeEvolution AS (
     SELECT
         p.id_pokemon,
@@ -71,5 +73,3 @@ FROM PokeEvolution pev
 LEFT JOIN PokeEstadistics pes ON pes.id_pokemon = pev.id_pokemon
 LEFT JOIN PokeMovements pm ON pm.id_pokemon = pev.id_pokemon
 ORDER BY pev.path;
-
-DESCRIBE estadisticas_base;
