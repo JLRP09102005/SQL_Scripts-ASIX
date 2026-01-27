@@ -205,3 +205,5 @@ CREATE INDEX idx_circuits_country ON circuits(country);
 CREATE INDEX idx_penalties_type ON penalties(penalty_type)
 
 --====== CHECKS ======
+ALTER TABLE results
+ADD CONSTRAINT chk_result_position CHECK 
