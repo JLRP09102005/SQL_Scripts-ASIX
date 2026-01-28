@@ -206,9 +206,5 @@ CREATE INDEX idx_penalties_type ON penalties(penalty_type)
 
 --====== CHECKS ======
 ALTER TABLE results
-<<<<<<< HEAD
-ADD CONSTRAINT chk_result_position CHECK (position >= 1 AND position <= 60)
-ADD CONSTRAINT chk_result_time CHECK (final_time != '00:00:00')
-=======
-ADD CONSTRAINT chk_result_position CHECK 
->>>>>>> 1f73075e1233d4da33ca5108b888b4033e6a9342
+ADD CONSTRAINT chk_result_position CHECK (position >= 1 AND position <= 60),
+ADD CONSTRAINT chk_result_time CHECK (final_time != '00:00:00'),
