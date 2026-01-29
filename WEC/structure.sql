@@ -3,6 +3,24 @@
 CREATE DATABASE WEC;
 USE WEC;
 
+--====== FUNCTIONS ======
+DELIMITER //
+
+CREATE FUNCTION PositionUnique ( position TINYINT )
+RETURNS TINYINT
+
+COMMENT='Check if the position to insrrt is unique per race'
+
+BEGIN
+
+SELECT
+    
+FROM results r
+
+END;
+
+DELIMITER ;
+
 --====== TABLES ======
 CREATE TABLE penalties(
     id_penalty INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -196,8 +214,7 @@ ADD CONSTRAINT FK_pilotsinscriptions_inscription FOREIGN KEY (id_vehicle, id_rac
     ON DELETE CASCADE;
 
 --====== INDEX ======
-CREATE INDEX idx_results_race ON results(id_race);
-CREATE INDEX idx_results_vehicle ON results(id_vehicle);
+CREATE INDEX idx_results_race ON results(id_race, id_vehicle);
 CREATE INDEX idx_inscriptions_race ON inscriptions(id_race);
 CREATE INDEX idx_teams_name ON teams(team_name);
 CREATE INDEX idx_pilots_name ON pilots(pilot_name);
@@ -207,7 +224,16 @@ CREATE INDEX idx_penalties_type ON penalties(penalty_type)
 --====== CHECKS ======
 ALTER TABLE results
 ADD CONSTRAINT chk_result_position CHECK (position >= 1 AND position <= 60),
-ADD CONSTRAINT chk_result_time CHECK (final_time != '00:00:00'),
+ADD CONSTRAINT chk_result_time CHECK (final_time != '00:00:00');
 
 ALTER TABLE penalties
-ADD CONSTRAINT chk_max_penalty_points CHECK()
+ADD CONSTRAINT chk_max_penalty_points CHECK(
+    (penalty_type = "POINTS" AND penalty_value <= 25) OR
+    (penalty_type = "TIME" AND penalty_value <= 60)
+)
+
+ALTER TABLE inscriptions
+ADD CONSTRAINT chk_vehicle_limit CHECK(vehicles_quantity <= 2);
+
+ALTER TABLE teams
+ADD 
