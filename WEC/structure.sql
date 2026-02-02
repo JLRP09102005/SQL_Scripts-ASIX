@@ -1,25 +1,25 @@
--- Active: 1762272161423@@127.0.0.1@3306@test
+-- Active: 1762272161423@@127.0.0.1@3306@wec
 --====== DATABASE ======
 CREATE DATABASE WEC;
 USE WEC;
 
 --====== FUNCTIONS ======
-DELIMITER //
+-- DELIMITER //
 
-CREATE FUNCTION PositionUnique ( position TINYINT )
-RETURNS TINYINT
+-- CREATE FUNCTION PositionUnique ( position TINYINT )
+-- RETURNS TINYINT
 
-COMMENT='Check if the position to insrrt is unique per race'
+-- COMMENT='Check if the position to insrrt is unique per race'
 
-BEGIN
+-- BEGIN
 
-SELECT
+-- SELECT
     
-FROM results r
+-- FROM results r
 
-END;
+-- END;
 
-DELIMITER ;
+-- DELIMITER ;
 
 --====== TABLES ======
 CREATE TABLE penalties(
@@ -33,7 +33,7 @@ CREATE TABLE penalties(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Team penalty registry';
 
 CREATE TABLE results(
@@ -53,17 +53,17 @@ CREATE TABLE results(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Team result registry';
 
 CREATE TABLE vehicles(
     id_vehicle INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     model VARCHAR(100) NOT NULL,
-    specifications MEDIUMBLOB COMMENT='Save PDFs'
+    specifications_url VARCHAR(1024)
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Teams vehicles specifications';
 
 CREATE TABLE races(
@@ -78,7 +78,7 @@ CREATE TABLE races(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Championship races registry';
 
 CREATE TABLE circuits(
@@ -90,7 +90,7 @@ CREATE TABLE circuits(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Catalog of circuits existing';
 
 CREATE TABLE teams(
@@ -104,7 +104,7 @@ CREATE TABLE teams(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='List of teams participating in the Championship';
 
 CREATE TABLE manufacturers(
@@ -114,32 +114,32 @@ CREATE TABLE manufacturers(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Manufacturers that sponsor teams';
 
 CREATE TABLE pilots(
     id_pilot INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     pilot_name VARCHAR(100) NOT NULL,
     pilot_age TINYINT UNSIGNED NOT NULL,
-    id_pilot_category TINYINT UNSIGNED NOT NULL,
+    id_pilot_category INT UNSIGNED NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Catalog of pilots participating';
 
 CREATE TABLE pilot_categories(
     id_pilot_category INT unsigned AUTO_INCREMENT PRIMARY KEY,
     pilot_category_name VARCHAR(50) NOT NULL,
     pilot_category_description VARCHAR(100) NOT NULL,
-    min_age TINYINT NOT NULL UNSIGNED DEFAULT 0
+    min_age TINYINT UNSIGNED NOT NULL DEFAULT 0
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Categories division for pilots';
 
 --====== INTERMEDIATE TABLES ======
@@ -153,7 +153,7 @@ CREATE TABLE inscriptions(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Intermediate table to unify inscription info';
 
 CREATE TABLE penalties_results(
@@ -163,7 +163,7 @@ CREATE TABLE penalties_results(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Intermediate table for penalties-results';
 
 CREATE TABLE pilots_inscriptions(
@@ -175,7 +175,7 @@ CREATE TABLE pilots_inscriptions(
 )
 ENGINE=InnoDB
 CHARACTER SET=utf8mb4
-COLLATE=utf8mb4_unicode_cs
+COLLATE=utf8mb4_bin
 COMMENT='Add pilot information to the inscription';
 
 --====== FOREIGN KEYS ======
