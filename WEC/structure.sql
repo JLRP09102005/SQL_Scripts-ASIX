@@ -95,7 +95,7 @@ COMMENT='Catalog of circuits existing';
 
 CREATE TABLE teams(
     id_team INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    team_name VARCHAR(100) NOT NULL,
+    team_name VARCHAR(100) UNIQUE NOT NULL,
     mechanics_num TINYINT UNSIGNED NOT NULL,
     id_manufacturer INT UNSIGNED,
 
@@ -120,6 +120,7 @@ COMMENT='Manufacturers that sponsor teams';
 CREATE TABLE pilots(
     id_pilot INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     pilot_name VARCHAR(100) NOT NULL,
+    pilot_age TINYINT UNSIGNED NOT NULL,
     id_pilot_category TINYINT UNSIGNED NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -236,4 +237,8 @@ ALTER TABLE inscriptions
 ADD CONSTRAINT chk_vehicle_limit CHECK(vehicles_quantity <= 2);
 
 ALTER TABLE teams
-ADD 
+ADD CONSTRAINT chk_teams_max_mechanics CHECK(mechanics_num <= 6);
+
+ALTER TABLE pilots
+ADD CONSTRAINT chk_basic_pilot_name CHECK(pilot_name LIKE '% %'),
+ADD CONSTRAINT chk_pilot_age CHECK(pilot_age >= 18);
