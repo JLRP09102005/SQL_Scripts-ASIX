@@ -149,6 +149,9 @@ CREATE TABLE inscriptions(
     id_team INT UNSIGNED NOT NULL,
     vehicles_quantity TINYINT UNSIGNED NOT NULL DEFAULT 1,
     registered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    max_vehicles TINYINT NOT NULL DEFAULT 2,
+    max_pilots TINYINT NOT NULL DEFAULT 3,
+    max_mechanics TINYINT NOT NULL DEFAULT 6,
     PRIMARY KEY(id_vehicle, id_race, id_team)
 )
 ENGINE=InnoDB
@@ -236,8 +239,8 @@ ADD CONSTRAINT chk_max_penalty_points CHECK(
 ALTER TABLE inscriptions
 ADD CONSTRAINT chk_vehicle_limit CHECK(vehicles_quantity <= 2);
 
-ALTER TABLE teams
-ADD CONSTRAINT chk_teams_max_mechanics CHECK(mechanics_num <= 6);
+-- ALTER TABLE teams
+-- ADD CONSTRAINT chk_teams_max_mechanics CHECK(mechanics_num <= 6);
 
 ALTER TABLE pilots
 ADD CONSTRAINT chk_basic_pilot_name CHECK(pilot_name LIKE '% %'),
