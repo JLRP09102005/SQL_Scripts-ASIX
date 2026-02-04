@@ -1,25 +1,7 @@
--- Active: 1762272161423@@127.0.0.1@3306@wec
+-- Active: 1763026326945@@127.0.0.1@3306@WEC
 --====== DATABASE ======
 CREATE DATABASE WEC;
 USE WEC;
-
---====== FUNCTIONS ======
--- DELIMITER //
-
--- CREATE FUNCTION PositionUnique ( position TINYINT )
--- RETURNS TINYINT
-
--- COMMENT='Check if the position to insrrt is unique per race'
-
--- BEGIN
-
--- SELECT
-    
--- FROM results r
-
--- END;
-
--- DELIMITER ;
 
 --====== TABLES ======
 CREATE TABLE penalties(
