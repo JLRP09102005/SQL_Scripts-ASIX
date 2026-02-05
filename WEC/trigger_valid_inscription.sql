@@ -9,6 +9,7 @@ BEGIN
 
     DECLARE new_vehicles_num TINYINT;
     DECLARE new_pilots_num TINYINT;
+    DECLARE new_mechanics_num TINYINT;
 
     SET new_vehicles_num = NEW.vehicles_quantity;
 
@@ -19,7 +20,9 @@ BEGIN
     WHERE pilins.id_vehicle = NEW.id_vehicle AND pilins.id_team = NEW.id_team AND pilins.id_race = NEW.id_race;
 
     SELECT MaxLimit(new_vehicles_num, NEW.max_vehicles, 'The vehicles number exceed the maximum allowed');
-    SELECT MaxLimit(new_pilots_num, NEW.max_pilots, 'The pilots number exceed the maximum allowed')
+    SELECT MaxLimit(new_pilots_num, NEW.max_pilots, 'The pilots number exceed the maximum allowed');
+
+    SELECT
 
     -- IF new_vehicles_num > NEW.max_vehicles THEN
     --     SIGNAL SQLSTATE '45000'

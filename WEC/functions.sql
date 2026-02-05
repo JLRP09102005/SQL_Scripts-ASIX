@@ -3,8 +3,7 @@ USE WEC;
 
 DELIMITER //
 
-CREATE FUNCTION MaxLimit ( numToCheck INT, maxNumber INT, customErrorMessage VARCHAR(100) )
-RETURNS TINYINT
+CREATE PROCEDURE MaxLimit ( numToCheck INT, maxNumber INT, customErrorMessage VARCHAR(100) )
 
 COMMENT='Check if the position to insrrt is unique per race'
 
