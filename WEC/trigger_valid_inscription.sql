@@ -1,5 +1,4 @@
---implementar comrpbar maximo de mecanicos
-
+-- Active: 1762272161423@@127.0.0.1@3306@wec
 USE wec;
 
 DELIMITER //
@@ -9,20 +8,27 @@ BEGIN
 
     DECLARE new_vehicles_num TINYINT;
     DECLARE new_pilots_num TINYINT;
-    DECLARE new_mechanics_num TINYINT;
+    DECLARE mechanics_num TINYINT;
 
     SET new_vehicles_num = NEW.vehicles_quantity;
+    SET mechanics_num = GetTeamMechanicsNumber(NEW.id_team);
+    SET new_pilots_num = CountInscriptedPilots(NEW.id_vehicle, NEW.id_team, NEW.id_race);
 
-    SELECT
-        COUNT(p.id_pilot) INTO new_pilots_num
-    FROM pilots_inscriptions pilins
-    JOIN pilots p ON p.id_pilot = pilins.id_pilot
-    WHERE pilins.id_vehicle = NEW.id_vehicle AND pilins.id_team = NEW.id_team AND pilins.id_race = NEW.id_race;
 
-    IF (UnderMaxLimit(new_vehicles_num, NEW.max_vehicles))
+    IF (NOT UnderMaxLimit(new_vehicles_num, NEW.max_vehicles)) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'The vehicles number exceed the maximum allowed';
+    END IF;
 
-    SELECT UnderMaxLimit(new_vehicles_num, NEW.max_vehicles, 'The vehicles number exceed the maximum allowed');
-    SELECT UnderMaxLimit(new_pilots_num, NEW.max_pilots, 'The pilots number exceed the maximum allowed');
+    IF (NOT UnderMaxLimit(new_pilots_num, NEW.max_pilots)) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'The pilots number exceed the maximum allowed';
+    END IF;
+
+    IF (NOT UnderMaxLimit(mechanics_num, NEW.max_mechanics)) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'The mechanics number exceed the maximum allowed';
+    END IF;
 
 END //
 DELIMITER ;
