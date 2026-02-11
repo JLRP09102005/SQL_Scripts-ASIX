@@ -6,10 +6,10 @@ USE WEC;
 --====== TABLES ======
 CREATE TABLE penalties(
     id_penalty INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    penalty_type ENUM('POINTS','TIME') DEFAULT 'POINTS' NOT NULL,
+    penalty_type ENUM('POINTS','TIME','DSQ','DNF') DEFAULT 'POINTS' NOT NULL,
     reason VARCHAR(100) NOT NULL,
-    penalty_value DECIMAL(6,2) NOT NULL,
-
+    penalty_value DECIMAL(6,2) NOT NULL, --Penalty time in minutes
+    penalty_applies_to ENUM('TEAM','PILOT'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
