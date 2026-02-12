@@ -1,4 +1,4 @@
--- Active: 1763026326945@@127.0.0.1@3306@WEC
+-- Active: 1762272161423@@127.0.0.1@3306@wec
 --====== DATABASE ======
 CREATE DATABASE WEC;
 USE WEC;
@@ -8,7 +8,7 @@ CREATE TABLE penalties(
     id_penalty INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     penalty_type ENUM('POINTS','TIME','DSQ','DNF') DEFAULT 'POINTS' NOT NULL,
     reason VARCHAR(100) NOT NULL,
-    penalty_value DECIMAL(6,2) NOT NULL, --Penalty time in minutes
+    penalty_value DECIMAL(7,2) NOT NULL, #Penalty time in seconds
     penalty_applies_to ENUM('TEAM','PILOT'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -22,6 +22,7 @@ CREATE TABLE results(
     id_result INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     position INT UNSIGNED NOT NULL,
     final_time TIME NOT NULL DEFAULT '00:00:00',
+    penalty_time TIME NOT NULL DEFAULT '00:00:00',
     base_points_team INT UNSIGNED NOT NULL DEFAULT 0,
     base_points_pilot INT UNSIGNED NOT NULL DEFAULT 0,
     penalty_points_team INT UNSIGNED NOT NULL DEFAULT 0,
@@ -220,9 +221,6 @@ ADD CONSTRAINT chk_max_penalty_points CHECK(
 
 ALTER TABLE inscriptions
 ADD CONSTRAINT chk_vehicle_limit CHECK(vehicles_quantity <= 2);
-
--- ALTER TABLE teams
--- ADD CONSTRAINT chk_teams_max_mechanics CHECK(mechanics_num <= 6);
 
 ALTER TABLE pilots
 ADD CONSTRAINT chk_basic_pilot_name CHECK(pilot_name LIKE '% %'),
