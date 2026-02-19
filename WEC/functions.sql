@@ -3,6 +3,15 @@ USE WEC;
 
 DELIMITER //
 
+CREATE FUNCTION CheckAfectedRowsCount ( IN row_count INT )
+RETURNS TINYINT(1)
+COMMENT 'Check if there are any row afected by an a DDL or DML sentence'
+NOT DETERMINISTIC
+NO SQL
+BEGIN
+    RETURN (row_count != 0);
+END //
+
 CREATE FUNCTION UnderMaxLimit ( IN numToCheck INT, IN maxNumber INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if a value is under his max limit'
@@ -53,7 +62,7 @@ CREATE PROCEDURE AddTeamPenalty ( IN penalty_type VARCHAR(20), IN penalty_value 
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
-
+    DECLARE affected_rows INT DEFAULT 0;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -69,13 +78,19 @@ BEGIN
         WHERE res.id_vehicle = vehicle_id
             AND res.id_team = team_id
             AND res.id_race = race_id;
+        
+        SET affected_rows = ROW_COUNT();
+
     ELSEIF (penalty_type = 'TIME') THEN
         UPDATE results res
         SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
         WHERE res.id_vehicle = vehicle_id
             AND res.id_team = team_id
             AND res.id_race = race_id;
-    ELSE
+        
+        SET affected_rows = ROW_COUNT();
+        
+    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
         UPDATE results res
         SET 
             res.penalty_time = SEC_TO_TIME(0),
@@ -84,6 +99,15 @@ BEGIN
         WHERE res.id_vehicle = vehicle_id
             AND res.id_team = team_id
             AND res.id_race = race_id;
+
+        SET affected_rows = ROW_COUNT();
+
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
+    END IF;
+
+    IF (CheckAfectedRowsCount(affected_rows)) THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
     END IF;
 
     COMMIT;
@@ -94,23 +118,46 @@ CREATE PROCEDURE AddPilotPenalty ( IN penalty_type VARCHAR(20), IN penalty_value
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
-
+    DECLARE affected_rows INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
     IF (penalty_type = 'POINTS') THEN
         UPDATE results res
         SET res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(penalty_value))
         WHERE res.id_result = result_id;
+
+        SET affected_rows = ROW_COUNT();
+
     ELSEIF (penalty_type = 'TIME') THEN
         UPDATE results res
         SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
         WHERE res.id_result = result_id;
-    ELSE
+
+        SET affected_rows = ROW_COUNT();
+
+    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
         UPDATE results res
         SET 
             res.penalty_time = SEC_TO_TIME(0),
             res.penalty_points_pilot = 0
         WHERE res.id_result = result_id;
+
+        SET affected_rows = ROW_COUNT();
+
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
+    IF (CheckAfectedRowsCount(affected_rows)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
+    END IF;
+
+    COMMIT;
 END //
 
 CREATE PROCEDURE GetPenaltyBasicInfo ( IN id_penalty INT, OUT penalty_type VARCHAR(20), OUT penalty_applies VARCHAR(20), OUT penalty_value DECIMAL(7,2) )
