@@ -1,0 +1,5 @@
+USE wec;
+
+DELIMITER //
+
+DELIMITER ;
