@@ -54,30 +54,39 @@ NOT DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
 
-        IF (penalty_type = 'POINTS') THEN
-            UPDATE results res
-            SET 
-                res.penalty_points_team = GREATEST(0, res.penalty_points_team - FLOOR(penalty_value)),
-                res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(penalty_value))
-            WHERE res.id_vehicle = vehicle_id
-                AND res.id_team = team_id
-                AND res.id_race = race_id;
-        ELSEIF (penalty_type = 'TIME') THEN
-            UPDATE results res
-            SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
-            WHERE res.id_vehicle = vehicle_id
-                AND res.id_team = team_id
-                AND res.id_race = race_id;
-        ELSE
-            UPDATE results res
-            SET 
-                res.penalty_time = SEC_TO_TIME(0),
-                res.penalty_points_team = 0,
-                res.penalty_points_pilot = 0
-            WHERE res.id_vehicle = vehicle_id
-                AND res.id_team = team_id
-                AND res.id_race = race_id;
-        END IF;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    IF (penalty_type = 'POINTS') THEN
+        UPDATE results res
+        SET 
+            res.penalty_points_team = GREATEST(0, res.penalty_points_team - FLOOR(penalty_value)),
+            res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(penalty_value))
+        WHERE res.id_vehicle = vehicle_id
+            AND res.id_team = team_id
+            AND res.id_race = race_id;
+    ELSEIF (penalty_type = 'TIME') THEN
+        UPDATE results res
+        SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
+        WHERE res.id_vehicle = vehicle_id
+            AND res.id_team = team_id
+            AND res.id_race = race_id;
+    ELSE
+        UPDATE results res
+        SET 
+            res.penalty_time = SEC_TO_TIME(0),
+            res.penalty_points_team = 0,
+            res.penalty_points_pilot = 0
+        WHERE res.id_vehicle = vehicle_id
+            AND res.id_team = team_id
+            AND res.id_race = race_id;
+    END IF;
+
+    COMMIT;
 
 END //
 
