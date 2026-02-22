@@ -205,4 +205,6 @@ BEGIN
     END IF;
 END //
 
+CREATE FUNCTION GetPositionsPointsMultiplier (IN race_id)
+
 DELIMITER ;
