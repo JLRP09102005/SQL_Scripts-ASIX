@@ -205,6 +205,32 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION GetPositionsPointsMultiplier (IN race_id)
+CREATE FUNCTION GetPositionsPointsMultiplier (IN race_id INT)
+RETURNS DECIMAL(3,1)
+COMMENT 'Get the multiplier number of the leader board positions using race id'
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE race_time TIME DEFAULT '00:00:00';
+    DECLARE points_mult DECIMAL(3,1) DEFAULT 1;
+
+    SELECT
+        rac.event_duration INTO race_time
+    FROM races rac
+    WHERE rac.id_race = race_id;
+
+    IF(race_time <= '06:00:00') THEN
+        SET points_mult = 1;
+    ELSEIF(race_time >= '08:00:00' AND race_time <= '10:00:00') THEN
+        SET points_mult = 1.5;
+    ELSEIF(race_time >= '24:00:00') THEN
+        SET points_mult = 2;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Race time is not correct, the points calculation cant proceed';
+    END IF;
+
+    RETURN points_mult;
+END //
+
 
 DELIMITER ;
