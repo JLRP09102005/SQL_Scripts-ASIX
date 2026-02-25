@@ -233,9 +233,16 @@ BEGIN
 END //
 
 CREATE PROCEDURE AddResultPoints(IN race_id INT, IN result_id INT, IN result_points TINYINT)
-MODIFIES SQL DATA
 DETERMINISTIC
+MODIFIES SQL DATA
 BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
     UPDATE results res SET
         res.base_points_team = result_points,
         res.base_points_pilot = result_points,
@@ -244,6 +251,34 @@ BEGIN
     WHERE 
         res.id_race = race_id AND
         res.id_result = result_id;
+    COMMIT;
+END //
+
+CREATE FUNCTION GetLeaderboardPointsCalc (IN position INT, IN base_points INT, IN points_mult DECIMAL(3,2))
+DETERMINISTIC
+NO SQL
+BEGIN
+    DECLARE calc_result INT DEFAULT 0;
+
+    IF(position = 1) THEN
+        SET calc_result = base_points * points_mult;
+    ELSEIF(position = 2) THEN
+        SET base_points = base_points - 7;
+        SET calc_result = base_points * points_mult;
+    ELSEIF(position >= 3 AND position <= 4) THEN
+        SET base_points = base_points - 3;
+        SET calc_result = base_points * points_mult;
+    ELSEIF(position >= 5 AND position <= 9) THEN
+        SET base_points = base_points - 2;
+        SET calc_result = base_points * points_mult;
+    ELSEIF(position = 10) THEN
+        SET base_points = base_points - 1;
+        SET calc_result = base_points * points_mult;
+    ELSE
+        SET calc_result = 0;
+    END IF;
+
+    RETURN calc_result;
 END //
 
 DELIMITER ;
