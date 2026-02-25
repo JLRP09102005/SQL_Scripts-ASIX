@@ -23,20 +23,7 @@ BEGIN
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-    SELECT
-        rac.event_duration INTO race_time
-    FROM races rac
-    WHERE rac.id_race = NEW.id_race;
-
-    IF(race_time <= '06:00:00') THEN
-        SET position_points_mult = 1;
-    ELSEIF(race_time >= '08:00:00' AND race_time <= '10:00:00') THEN
-        SET position_points_mult = 1.5;
-    ELSEIF(race_time >= '24:00:00') THEN
-        SET position_points_mult = 2;
-    ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Race time is not correct, the points calculation cant proceed';
-    END IF;
+    SELECT GetPositionsPointsMultiplier(NEW.id_race) INTO position_points_mult;
     
     OPEN cur_times;
     WHILE (done != 1 AND position <= 10) DO
@@ -56,17 +43,12 @@ BEGIN
         ELSEIF(position = 10) THEN
             SET position_points = position_points - 1;
             SET points_calc_result = position_points * position_points_mult;
+        ELSE
+            SET points_calc_result = 0;
         END IF;
 
         IF(done != 1) THEN
-            UPDATE results res SET
-                res.base_points_team = points_calc_result,
-                res.base_points_pilot = points_calc_result,
-                res.penalty_points_team = points_calc_result,
-                res.penalty_points_pilot = points_calc_result
-            WHERE 
-                res.id_race = NEW.id_race AND
-                res.id_result = cur_id_result;
+            CALL AddResultPoints(NEW.id_race, cur_id_result, points_calc_result);
         END IF;
 
         SET position = position + 1;

@@ -185,7 +185,7 @@ BEGIN
 END //
 
 CREATE PROCEDURE ProcessResultPenalty ( IN id_penalty INT, IN id_result INT )
-NOT DETERMINISTIC
+DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
     DECLARE penalty_type VARCHAR(20) DEFAULT 'POINTS';
@@ -232,5 +232,18 @@ BEGIN
     RETURN points_mult;
 END //
 
+CREATE PROCEDURE AddResultPoints(IN race_id INT, IN result_id INT, IN result_points TINYINT)
+MODIFIES SQL DATA
+DETERMINISTIC
+BEGIN
+    UPDATE results res SET
+        res.base_points_team = result_points,
+        res.base_points_pilot = result_points,
+        res.penalty_points_team = result_points,
+        res.penalty_points_pilot = result_points
+    WHERE 
+        res.id_race = race_id AND
+        res.id_result = result_id;
+END //
 
 DELIMITER ;
