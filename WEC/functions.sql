@@ -1,6 +1,5 @@
 -- Active: 1762272161423@@127.0.0.1@3306@wec
 USE WEC;
-
 DELIMITER //
 
 CREATE FUNCTION CheckAfectedRowsCount ( IN row_count INT )
@@ -58,153 +57,6 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE AddTeamPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN vehicle_id INT, IN team_id INT, IN race_id INT )
-NOT DETERMINISTIC
-MODIFIES SQL DATA
-BEGIN
-    DECLARE affected_rows INT DEFAULT 0;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-    IF (penalty_type = 'POINTS') THEN
-        UPDATE results res
-        SET 
-            res.penalty_points_team = GREATEST(0, res.penalty_points_team - FLOOR(penalty_value)),
-            res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(penalty_value))
-        WHERE res.id_vehicle = vehicle_id
-            AND res.id_team = team_id
-            AND res.id_race = race_id;
-        
-        SET affected_rows = ROW_COUNT();
-
-    ELSEIF (penalty_type = 'TIME') THEN
-        UPDATE results res
-        SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
-        WHERE res.id_vehicle = vehicle_id
-            AND res.id_team = team_id
-            AND res.id_race = race_id;
-        
-        SET affected_rows = ROW_COUNT();
-        
-    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
-        UPDATE results res
-        SET 
-            res.penalty_time = SEC_TO_TIME(0),
-            res.penalty_points_team = 0,
-            res.penalty_points_pilot = 0
-        WHERE res.id_vehicle = vehicle_id
-            AND res.id_team = team_id
-            AND res.id_race = race_id;
-
-        SET affected_rows = ROW_COUNT();
-
-    ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
-    END IF;
-
-    IF (CheckAfectedRowsCount(affected_rows)) THEN 
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
-    END IF;
-
-    COMMIT;
-
-END //
-
-CREATE PROCEDURE AddPilotPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN result_id INT )
-NOT DETERMINISTIC
-MODIFIES SQL DATA
-BEGIN
-    DECLARE affected_rows INT DEFAULT 0;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-    
-    START TRANSACTION;
-    IF (penalty_type = 'POINTS') THEN
-        UPDATE results res
-        SET res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(penalty_value))
-        WHERE res.id_result = result_id;
-
-        SET affected_rows = ROW_COUNT();
-
-    ELSEIF (penalty_type = 'TIME') THEN
-        UPDATE results res
-        SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(penalty_value))
-        WHERE res.id_result = result_id;
-
-        SET affected_rows = ROW_COUNT();
-
-    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
-        UPDATE results res
-        SET 
-            res.penalty_time = SEC_TO_TIME(0),
-            res.penalty_points_pilot = 0
-        WHERE res.id_result = result_id;
-
-        SET affected_rows = ROW_COUNT();
-
-    ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
-    END IF;
-
-    IF (CheckAfectedRowsCount(affected_rows)) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
-    END IF;
-
-    COMMIT;
-END //
-
-CREATE PROCEDURE GetPenaltyBasicInfo ( IN id_penalty INT, OUT penalty_type VARCHAR(20), OUT penalty_applies VARCHAR(20), OUT penalty_value DECIMAL(7,2) )
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    SELECT
-        pen.penalty_type INTO penalty_type,
-        pen.penalty_applies_to INTO penalty_applies,
-        pen.penalty_value INTO penalty_value
-    FROM penalties pen
-    WHERE pen.id_penalty = id_penalty;
-END //
-
-CREATE PROCEDURE GetResultsForeignInfo ( IN result_id INT, OUT vehicle_id INT, OUT team_id INT, OUT race_id INT )
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    SELECT
-        res.id_vehicle INTO vehicle_id,
-        res.id_team INTO team_id,
-        res.id_race INTO race_id
-    FROM results res
-    WHERE res.id_result = result_id;
-END //
-
-CREATE PROCEDURE ProcessResultPenalty ( IN id_penalty INT, IN id_result INT )
-DETERMINISTIC
-MODIFIES SQL DATA
-BEGIN
-    DECLARE penalty_type VARCHAR(20) DEFAULT 'POINTS';
-    DECLARE penalty_applies VARCHAR(20) DEFAULT 'PILOT';
-    DECLARE penalty_value DECIMAL(7,2) DEFAULT 0;
-    DECLARE vehicle_id INT DEFAULT NULL;
-    DECLARE team_id INT DEFAULT NULL;
-    DECLARE race_id INT DEFAULT NULL;
-
-    CALL GetPenaltyBasicInfo(id_penalty, penalty_type, penalty_applies, penalty_value);
-    CALL GetResultsForeignInfo(id_result, vehicle_id, team_id, race_id);
-
-    IF (penalty_applies = 'PILOT') THEN
-        CALL AddPilotPenalty(penalty_type, penalty_value, id_result);
-    ELSE
-        CALL AddTeamPenalty(penalty_type, penalty_value, vehicle_id, team_id, race_id);
-    END IF;
-END //
-
 CREATE FUNCTION GetPositionsPointsMultiplier (IN race_id INT)
 RETURNS DECIMAL(3,1)
 COMMENT 'Get the multiplier number of the leader board positions using race id'
@@ -230,28 +82,6 @@ BEGIN
     END IF;
 
     RETURN points_mult;
-END //
-
-CREATE PROCEDURE AddResultPoints(IN race_id INT, IN result_id INT, IN result_points TINYINT)
-DETERMINISTIC
-MODIFIES SQL DATA
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-    UPDATE results res SET
-        res.base_points_team = result_points,
-        res.base_points_pilot = result_points,
-        res.penalty_points_team = result_points,
-        res.penalty_points_pilot = result_points
-    WHERE 
-        res.id_race = race_id AND
-        res.id_result = result_id;
-    COMMIT;
 END //
 
 CREATE FUNCTION GetLeaderboardPointsCalc (IN position INT, IN base_points INT, IN points_mult DECIMAL(3,2))
