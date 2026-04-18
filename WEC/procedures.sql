@@ -1,7 +1,7 @@
 USE wec;
 DELIMITER //
 
-CREATE PROCEDURE AddTeamPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN vehicle_id INT, IN team_id INT, IN race_id INT )
+CREATE PROCEDURE sp_AddTeamPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN vehicle_id INT, IN team_id INT, IN race_id INT )
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
@@ -57,7 +57,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE AddPilotPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN result_id INT )
+CREATE PROCEDURE sp_AddPilotPenalty ( IN penalty_type VARCHAR(20), IN penalty_value DECIMAL(7,2), IN result_id INT )
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
@@ -103,7 +103,7 @@ BEGIN
     COMMIT;
 END //
 
-CREATE PROCEDURE GetPenaltyBasicInfo ( IN id_penalty INT, OUT penalty_type VARCHAR(20), OUT penalty_applies VARCHAR(20), OUT penalty_value DECIMAL(7,2) )
+CREATE PROCEDURE sp_GetPenaltyBasicInfo ( IN id_penalty INT, OUT penalty_type VARCHAR(20), OUT penalty_applies VARCHAR(20), OUT penalty_value DECIMAL(7,2) )
 DETERMINISTIC
 READS SQL DATA
 BEGIN
@@ -115,7 +115,7 @@ BEGIN
     WHERE pen.id_penalty = id_penalty;
 END //
 
-CREATE PROCEDURE GetResultsForeignInfo ( IN result_id INT, OUT vehicle_id INT, OUT team_id INT, OUT race_id INT )
+CREATE PROCEDURE sp_GetResultsForeignInfo ( IN result_id INT, OUT vehicle_id INT, OUT team_id INT, OUT race_id INT )
 DETERMINISTIC
 READS SQL DATA
 BEGIN
@@ -127,7 +127,7 @@ BEGIN
     WHERE res.id_result = result_id;
 END //
 
-CREATE PROCEDURE ProcessResultPenalty ( IN id_penalty INT, IN id_result INT )
+CREATE PROCEDURE sp_ProcessResultPenalty ( IN id_penalty INT, IN id_result INT )
 DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
@@ -138,17 +138,17 @@ BEGIN
     DECLARE team_id INT DEFAULT NULL;
     DECLARE race_id INT DEFAULT NULL;
 
-    CALL GetPenaltyBasicInfo(id_penalty, penalty_type, penalty_applies, penalty_value);
-    CALL GetResultsForeignInfo(id_result, vehicle_id, team_id, race_id);
+    CALL sp_GetPenaltyBasicInfo(id_penalty, penalty_type, penalty_applies, penalty_value);
+    CALL sp_GetResultsForeignInfo(id_result, vehicle_id, team_id, race_id);
 
     IF (penalty_applies = 'PILOT') THEN
         CALL AddPilotPenalty(penalty_type, penalty_value, id_result);
     ELSE
-        CALL AddTeamPenalty(penalty_type, penalty_value, vehicle_id, team_id, race_id);
+        CALL sp_AddTeamPenalty(penalty_type, penalty_value, vehicle_id, team_id, race_id);
     END IF;
 END //
 
-CREATE PROCEDURE AddResultPoints(IN race_id INT, IN result_id INT, IN result_points TINYINT)
+CREATE PROCEDURE sp_AddResultPoints(IN race_id INT, IN result_id INT, IN result_points TINYINT)
 DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
@@ -170,7 +170,7 @@ BEGIN
     COMMIT;
 END //
 
-CREATE PROCEDURE UpdateLeaderPoints (IN new_id_race INT)
+CREATE PROCEDURE sp_UpdateLeaderPoints (IN new_id_race INT)
 DETERMINISTIC
 MODIFIES SQL DATA
 BEGIN
@@ -210,7 +210,7 @@ BEGIN
         SELECT GetLeaderboardPointsCalc(v_position, v_position_points, v_position_points_mult) INTO v_points_calc_result;
 
         IF(v_done != 1) THEN
-            CALL AddResultPoints(v_new_id_race, v_cur_id_result, v_points_calc_result);
+            CALL sp_AddResultPoints(v_new_id_race, v_cur_id_result, v_points_calc_result);
         END IF;
 
         SET v_position = v_position + 1;

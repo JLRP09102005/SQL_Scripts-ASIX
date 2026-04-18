@@ -1,0 +1,6 @@
+****SQL STATE LEGENT****
+
+-45001 -> Error validating circuit insertion data
+-45002 -> Error validating inscription insertion data
+-45003 -> Error validating manufacturer insertion data
+-45004 -> Error validating penalty insertion data
