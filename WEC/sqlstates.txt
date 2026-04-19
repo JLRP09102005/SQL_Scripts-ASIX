@@ -4,3 +4,15 @@
 -45002 -> Error validating inscription insertion data
 -45003 -> Error validating manufacturer insertion data
 -45004 -> Error validating penalty insertion data
+-45004 -> Error validating pilot catergories insertion data
+-45006 -> Error validating pilot insertion data
+-45007 -> Error validating pilot inscription insertion data
+-45009 -> Error validating result insertion data
+-45010 -> Error validating team insertion data
+-45011 -> Error validating team insertion data
+-45012 -> Error validating circuit update data
+-45013 -> Error validating circuit delete data
+-45014 -> Error validating inscription update data
+-45015 -> Error validating inscription delete data
+-45016 -> Error validating manufacturer update data
+-45017 -> Error validating manufacturer delete data
