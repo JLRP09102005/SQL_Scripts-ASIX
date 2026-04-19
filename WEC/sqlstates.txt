@@ -1,18 +1,58 @@
-****SQL STATE LEGENT****
+****SQL STATE LEGEND****
 
 -45001 -> Error validating circuit insertion data
--45002 -> Error validating inscription insertion data
--45003 -> Error validating manufacturer insertion data
--45004 -> Error validating penalty insertion data
--45004 -> Error validating pilot catergories insertion data
--45006 -> Error validating pilot insertion data
--45007 -> Error validating pilot inscription insertion data
--45009 -> Error validating result insertion data
--45010 -> Error validating team insertion data
--45011 -> Error validating team insertion data
 -45012 -> Error validating circuit update data
 -45013 -> Error validating circuit delete data
+
+-45002 -> Error validating inscription insertion data
 -45014 -> Error validating inscription update data
 -45015 -> Error validating inscription delete data
+
+-45003 -> Error validating manufacturer insertion data
 -45016 -> Error validating manufacturer update data
 -45017 -> Error validating manufacturer delete data
+
+-45004 -> Error validating penalty insertion data
+-45018 -> Error validating penalty update data
+-45019 -> Error validating penalty delete data
+
+-45004 -> Error validating pilot categories insertion data
+-45020 -> Error validating pilot categories update data
+-45021 -> Error validating pilot categories delete data
+
+-45006 -> Error validating pilot insertion data
+-45022 -> Error validating pilot update data
+-45023 -> Error validating pilot delete data
+
+-45007 -> Error validating pilot inscription insertion data
+-45024 -> Error validating pilot inscription update data
+-45025 -> Error validating pilot inscription delete data
+
+-45008 -> Error validating race insertion data
+-45026 -> Error validating race update data
+-45027 -> Error validating race delete data
+
+-45009 -> Error validating result insertion data
+-45028 -> Error validating result update data
+-45029 -> Error validating result delete data
+
+-45010 -> Error validating team insertion data
+-45030 -> Error validating team update data
+-45031 -> Error validating team delete data
+
+-45011 -> Error validating team insertion data
+-45032 -> Error validating team update data
+-45033 -> Error validating team delete data
+
+-45034 -> Error adding team penalty
+-45035 -> Error adding pilot penalty
+-45039 -> Error adding result points
+
+-45036 -> Error getting penalty basic info
+-45037 -> Error getting results foreign info
+-45040 -> Error getting leaderboard results info
+-45041 -> Error getting pilot season stats info
+
+-45038 -> Error processing penalty result
+
+-45042 -> Error updatting leader points
