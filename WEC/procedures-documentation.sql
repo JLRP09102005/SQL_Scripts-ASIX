@@ -4,6 +4,7 @@ CREATE PROCEDURE sp_AddTeamPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalty
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Applies a penalty (POINTS, TIME, DNF) to a team result. Updates the result record for the given vehicle, team and race. Called by sp_ProcessResultPenalty.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -39,6 +40,7 @@ CREATE PROCEDURE sp_AddPilotPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalt
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Applies a penalty (POINTS, TIME, DSQ, DNF) to a pilot result. Updates the result record for the given result id. Called by sp_ProcessResultPenalty.'
 BEGIN
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
     #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
@@ -71,6 +73,7 @@ CREATE PROCEDURE sp_GetPenaltyBasicInfo ( IN p_id_penalty INT, OUT p_penalty_typ
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Retrieves type, applies_to and value of a penalty by id. Outputs results into OUT parameters. Called by sp_ProcessResultPenalty.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -90,6 +93,7 @@ CREATE PROCEDURE sp_GetResultsForeignInfo ( IN p_result_id INT, OUT p_vehicle_id
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Retrieves the foreign key ids (vehicle, team, race) of a result record by id. Outputs results into OUT parameters. Called by sp_ProcessResultPenalty.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -109,6 +113,7 @@ CREATE PROCEDURE sp_ProcessResultPenalty ( IN p_id_penalty INT, IN p_id_result I
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Orchestrates penalty application to a result. Retrieves penalty and result data, then delegates to sp_AddPilotPenalty or sp_AddTeamPenalty based on penalty target.'
 BEGIN
 
     #Declarar una variable "penalty_type" de tipo VARCHAR(20) por defecto con valor 'POINTS'
@@ -140,6 +145,7 @@ CREATE PROCEDURE sp_AddResultPoints(IN p_race_id INT, IN p_result_id INT, IN p_r
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates the points of a result record for a given race and result id. Called by sp_UpdateLeaderPoints.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -171,6 +177,7 @@ CREATE PROCEDURE sp_UpdateLeaderPoints (IN p_new_id_race INT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Iterates over the top 10 results of a race and assigns leaderboard points to each. Uses fn_GetPositionsPointsMultiplier and fn_GetLeaderboardPointsCalc to calculate points. Calls sp_AddResultPoints to persist each result.'
 BEGIN
 
     #Declarar una variable "v_done" de tipo TINYINT(1) y valor por defecto 0
@@ -218,6 +225,7 @@ CREATE PROCEDURE sp_InsertCircuitData (IN p_circuit_name VARCHAR(100), IN p_coun
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new circuit record into the circuits table. Validates all input data including direction enum and length range. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -254,6 +262,7 @@ CREATE PROCEDURE sp_UpdateCircuitData (IN p_circuit_id INT, IN p_circuit_name VA
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing circuit record by id. Validates all input data including direction enum, length range and name uniqueness. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -291,6 +300,7 @@ CREATE PROCEDURE sp_DeleteCircuitData (IN p_circuit_id INT, OUT p_spstate TINYIN
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing circuit record by id. Validates referential integrity before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -326,6 +336,7 @@ CREATE PROCEDURE sp_InsertInscriptionData (IN p_id_vehicle INT, IN p_id_race INT
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new inscription record into the inscriptions table. Validates all foreign keys (vehicle, race, team) and registration date before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -362,6 +373,7 @@ CREATE PROCEDURE sp_UpdateInscriptionData (IN p_id_inscription INT, IN p_id_vehi
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing inscription record by id. Validates all foreign keys (vehicle, race, team) and registration date before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -399,6 +411,7 @@ CREATE PROCEDURE sp_DeleteInscriptionData (IN p_id_inscription INT, OUT p_spstat
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing inscription record by id. Validates referential integrity before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -431,6 +444,7 @@ CREATE PROCEDURE sp_InsertManufacturerData (IN p_manufacturer_name VARCHAR(100),
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new manufacturer record into the manufacturers table. Validates that the manufacturer name is not null or empty and checks for duplicate entries before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -463,6 +477,7 @@ CREATE PROCEDURE sp_UpdateManufacturerData (IN p_id_manufacturer INT, IN p_manuf
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing manufacturer record by id. Validates that the manufacturer exists, ensures the name is not null or empty, and checks for duplicate name entries before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -496,6 +511,7 @@ CREATE PROCEDURE sp_DeleteManufacturerData (IN p_id_manufacturer INT, OUT p_spst
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing manufacturer record by id. Validates that the manufacturer exists and checks for associated vehicles referencing it before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -530,6 +546,7 @@ CREATE PROCEDURE sp_InsertPenaltyData (IN p_penalty_type CHAR(30), IN p_reason V
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new penalty record into the penalties table. Validates that penalty_type, reason, and penalty_applies_to are not null or empty, and that penalty_value is a positive number before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -564,6 +581,7 @@ CREATE PROCEDURE sp_UpdatePenaltyData (IN p_id_penalty INT, IN p_penalty_type CH
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing penalty record by id. Validates that the penalty exists, ensures penalty_type, reason, and penalty_applies_to are not null or empty, and that penalty_value is a positive number before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -599,6 +617,7 @@ CREATE PROCEDURE sp_DeletePenaltyData (IN p_id_penalty INT, OUT p_spstate TINYIN
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing penalty record by id. Validates that the penalty exists and checks for dependent records referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -632,6 +651,7 @@ CREATE PROCEDURE sp_InsertPilotCategoriesData (IN p_pilot_category_name VARCHAR(
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new pilot category record into the pilot_categories table. Validates that pilot_category_name is not null or empty, checks for duplicate category names, and ensures min_age is a positive valid age value before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -665,6 +685,7 @@ CREATE PROCEDURE sp_UpdatePilotCategoriesData (IN p_id_pilot_category INT, IN p_
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing pilot category record by id. Validates that the category exists, ensures pilot_category_name is not null or empty, checks for duplicate category names, and ensures min_age is a positive valid age value before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -699,6 +720,7 @@ CREATE PROCEDURE sp_DeletePilotCategoriesData (IN p_id_pilot_category INT, OUT p
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing pilot category record by id. Validates that the category exists and checks for associated pilots referencing it before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -732,6 +754,7 @@ CREATE PROCEDURE sp_InsertPilotData (IN p_pilot_name VARCHAR(100), IN p_pilot_ag
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new pilot record into the pilots table. Validates that pilot_name is not null or empty, ensures pilot_age is a positive value meeting the minimum age requirement of the given category, and verifies the pilot category foreign key exists before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -766,6 +789,7 @@ CREATE PROCEDURE sp_UpdatePilotData (IN p_id_pilot INT, IN p_pilot_name VARCHAR(
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing pilot record by id. Validates that the pilot exists, ensures pilot_name is not null or empty, verifies pilot_age is a positive value meeting the minimum age requirement of the given category, and checks the pilot category foreign key exists before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -801,6 +825,7 @@ CREATE PROCEDURE sp_DeletePilotData (IN p_id_pilot INT, OUT p_spstate TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing pilot record by id. Validates that the pilot exists and checks for dependent records such as race results or team assignments referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -835,6 +860,7 @@ CREATE PROCEDURE sp_InsertPilotInscriptionData (IN p_id_pilot INT, IN p_id_vehic
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new pilot inscription record into the pilot_inscriptions table. Validates all foreign keys (pilot, vehicle, race, team) exist before insertion, and checks for duplicate pilot-race combinations to prevent double registration. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -870,6 +896,7 @@ CREATE PROCEDURE sp_UpdatePilotInscriptionData (IN p_id_pilot_inscription INT, I
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing pilot inscription record by id. Validates that the inscription exists, verifies all foreign keys (pilot, vehicle, race, team) exist, and checks for duplicate pilot-race combinations excluding the current record before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -906,6 +933,7 @@ CREATE PROCEDURE sp_DeletePilotInscriptionData (IN p_id_pilot_inscription INT, O
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing pilot inscription record by id. Validates that the pilot inscription exists and checks for dependent records such as race results or penalties referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -940,6 +968,7 @@ CREATE PROCEDURE sp_InsertRaceData (IN p_event_name VARCHAR(100), IN p_event_dat
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new race record into the races table. Validates that event_name is not null or empty, ensures event_date is not in the past, verifies event_duration is a positive time value, and checks the circuit foreign key exists before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -975,6 +1004,7 @@ CREATE PROCEDURE sp_UpdateRaceData (IN p_id_race INT, IN p_event_name VARCHAR(10
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing race record by id. Validates that the race exists, ensures event_name is not null or empty, verifies event_date is not in the past, checks event_duration is a positive time value, and confirms the circuit foreign key exists before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1011,6 +1041,7 @@ CREATE PROCEDURE sp_DeleteRaceData (IN p_id_race INT, OUT p_spstate TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing race record by id. Validates that the race exists and checks for dependent records such as inscriptions, pilot inscriptions, and race results referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1057,6 +1088,7 @@ CREATE PROCEDURE sp_InsertResultData (
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new race result record into the results table. Validates that position is a positive integer, final_time and penalty_time are valid time values, base and penalty points are non-negative, and verifies all foreign keys (vehicle, race, team) exist before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1106,6 +1138,7 @@ CREATE PROCEDURE sp_UpdateResultData (
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing race result record by id. Validates that the result exists, ensures position is a positive integer, final_time and penalty_time are valid time values, base and penalty points are non-negative, and verifies all foreign keys (vehicle, race, team) exist before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1144,6 +1177,7 @@ CREATE PROCEDURE sp_DeleteResultData (IN p_id_result INT, OUT p_spstate TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing race result record by id. Validates that the result exists and checks for dependent records such as pilot results or penalty assignments referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1176,6 +1210,7 @@ CREATE PROCEDURE sp_InsertTeamData (IN p_team_name VARCHAR(100), IN p_mechanic_n
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new team record into the teams table. Validates that team_name is not null or empty, checks for duplicate team names, ensures mechanic_num is a positive value, and verifies the manufacturer foreign key exists before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1210,6 +1245,7 @@ CREATE PROCEDURE sp_UpdateTeamData (IN p_id_team INT, IN p_team_name VARCHAR(100
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing team record by id. Validates that the team exists, ensures team_name is not null or empty, checks for duplicate team names excluding the current record, verifies mechanic_num is a positive value, and confirms the manufacturer foreign key exists before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1245,6 +1281,7 @@ CREATE PROCEDURE sp_DeleteTeamData (IN p_id_team INT, OUT p_spstate TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing team record by id. Validates that the team exists and checks for dependent records such as inscriptions, pilot inscriptions, and race results referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1280,6 +1317,7 @@ CREATE PROCEDURE sp_InsertVehicleData (IN p_model VARCHAR(100), IN p_specificati
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Inserts a new vehicle record into the vehicles table. Validates that model is not null or empty, checks for duplicate model entries, and ensures specifications_url is a valid and well-formed URL before insertion. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1313,6 +1351,7 @@ CREATE PROCEDURE sp_UpdateVehicleData (IN p_id_vehicle INT, IN p_model VARCHAR(1
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Updates an existing vehicle record by id. Validates that the vehicle exists, ensures model is not null or empty, checks for duplicate model entries excluding the current record, and verifies specifications_url is a valid and well-formed URL before update. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1347,6 +1386,7 @@ CREATE PROCEDURE sp_DeleteVehicleData (IN p_id_vehicle INT, OUT p_spstate TINYIN
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Deletes an existing vehicle record by id. Validates that the vehicle exists and checks for dependent records such as inscriptions, pilot inscriptions, and race results referencing it before deletion to prevent orphaned data. Returns execution state via p_spstate.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1382,6 +1422,7 @@ CREATE PROCEDURE sp_GetRaceLeaderboard(IN p_id_race INT, IN p_race_date DATETIME
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Retrieves the leaderboard for a specific race by id and date. Returns pilots ordered by final position, including pilot name, team, vehicle, final time, penalty time, and total points, filtered by the given race date. Reads data only without modifying it.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
@@ -1406,6 +1447,7 @@ CREATE PROCEDURE sp_GetPilotSeasonStats(IN p_id_pilot INT, IN p_season_date DATE
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
+COMMENT 'Retrieves season statistics for a specific pilot by id and season date. Returns aggregated performance data such as races entered, wins, podiums, points, and average finish position for the given season. Reads data only without modifying it.'
 BEGIN
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
