@@ -539,7 +539,6 @@ BEGIN
 
     #Hacer un set a la variable "p_spstate" de valor 1
 
-
 END //
 
 CREATE PROCEDURE sp_InsertPenaltyData (IN p_penalty_type CHAR(30), IN p_reason VARCHAR(100), IN p_penalty_value DECIMAL(7,2), IN p_penalty_applies_to VARCHAR(30), OUT p_spstate TINYINT)
@@ -1418,7 +1417,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_GetRaceLeaderboard(IN p_id_race INT, IN p_race_date DATETIME)
+CREATE PROCEDURE sp_GetRaceLeaderboard (IN p_id_race INT, IN p_race_date DATETIME)
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -1443,7 +1442,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_GetPilotSeasonStats(IN p_id_pilot INT, IN p_season_date DATETIME)
+CREATE PROCEDURE sp_GetPilotSeasonStats (IN p_id_pilot INT, IN p_season_date DATETIME)
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
