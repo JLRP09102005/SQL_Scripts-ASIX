@@ -7,6 +7,23 @@ SQL SECURITY INVOKER
 COMMENT 'Applies a penalty (POINTS, TIME, DNF) to a team result. Updates the result record for the given vehicle, team and race. Called by sp_ProcessResultPenalty.'
 BEGIN
 
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+
+        IF COALESCE(v_error_message, '') = '' THEN
+            RESIGNAL;
+        ELSE
+            SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message
+        END IF;
+        
+    END;
+
+
+
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
     #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
 
@@ -17,7 +34,7 @@ BEGIN
     
     #Comprobar que ninguno de los parametros sea null (futura funcion)
     #Comprobar que ningun string este vacio (futura funcion)
-        #Comprobar que "penalty_type" esta dentro de los valores ['POINTS','TIME','DSQ','DNF'] (funcion futura)
+    #Comprobar que "penalty_type" esta dentro de los valores ['POINTS','TIME','DSQ','DNF'] (funcion futura)
     #Comprobar con un if exists y un select si el parametro "p_vehicle_id" existe en la tabla de vehiculos (funcion futura)
     #Comprobar con un if exists y un select si el parametro "p_team_id" existe en la tabla de equipos (funcion futura)
     #Comprobar con un if exists y un select si el parametro "p_race_id" existe en la tabla de carreras (funcion futura)
