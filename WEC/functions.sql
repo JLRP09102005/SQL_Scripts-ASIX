@@ -112,6 +112,7 @@ BEGIN
 END //
 
 CREATE FUNCTION fn_CheckNullEmptyArray (array JSON)
+RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
 
     DECLARE i INT DEFAULT 0;
@@ -121,9 +122,16 @@ BEGIN
     SET total = JSON_LENGTH(arr);
     WHILE i < total DO
 
-        sentence = 
+        SET sentence = JSON_UNQUOTE(JSON_EXTRACT(arr, CONCAT('$[', i, ']')));
+        IF sentence = "" OR sentence = null THEN
+            RETURN 1;
+        END IF;
+
+        SET i = i + 1;
 
     END WHILE;
+
+    RETURN 0;
 
 END //
 

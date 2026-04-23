@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         ROLLBACK;
 
-        IF COALESCE(v_error_message, '') = '' THEN
+        IF v_error_message = '' THEN
             RESIGNAL;
         ELSE
             SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message
@@ -22,6 +22,10 @@ BEGIN
         
     END;
 
+    IF fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type,p_penalty_Value,p_vehicle_id,p_team_id,p_race_id)) THEN
+        SET v_error_message = "Error validating sp_AddTeamPenalty parameters, there are empty or null parameters"
+        SIGNAL SQLSTATE '45000'
+    END IF;
 
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
