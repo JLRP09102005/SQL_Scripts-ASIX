@@ -135,4 +135,44 @@ BEGIN
 
 END //
 
+CREATE FUNCTION fn_CheckPenaltyTypeCorrect (p_penalty_type)
+RETURN TINYINT(1) DETERMINISTIC
+BEGIN
+    IF p_penalty_type = 'POINTS' THEN RETURN 0; END IF;
+    IF p_penalty_type = 'TIME' THEN RETURN 0; END IF;
+    IF p_penalty_type = 'DSQ' THEN RETURN 0; END IF;
+    IF p_penalty_type = 'DNF' THEN RETURN 0; END IF;
+
+    RETURN 1;
+END //
+
+CREATE FUNCTION fn_IdRegisterExistsFromVehicles (p_id INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+
+    DECLARE select_result INT DEFAULT 0;
+
+    SELECT 1 INTO select_result
+    FROM vehicles
+    WHERE id_vehicle = p_id
+    LIMIT 1;
+
+    RETURN select_result;
+
+END //
+
+CREATE FUNCTION fn_IdRegisterExistsFromTeams(p_id INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE select_result INT DEFAULT 0;
+
+    SELECT 1 INTO select_result
+    FROM teams
+    WHERE id_team = p_id
+    LIMIT 1;
+
+    RETURN select_result;
+
+END
+
 DELIMITER ;

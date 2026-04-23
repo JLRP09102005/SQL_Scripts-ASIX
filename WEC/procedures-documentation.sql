@@ -19,14 +19,27 @@ BEGIN
         ELSE
             SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message
         END IF;
-        
     END;
 
     IF fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type,p_penalty_Value,p_vehicle_id,p_team_id,p_race_id)) THEN
-        SET v_error_message = "Error validating sp_AddTeamPenalty parameters, there are empty or null parameters"
-        SIGNAL SQLSTATE '45000'
+        SET v_error_message = 'Error validating sp_AddTeamPenalty parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45034';
     END IF;
 
+    IF NOT fn_CheckPenaltyTypeCorrect(p_penalty_type) THEN
+        SET v_error_message = 'Error validating sp_AddTeamPenalty parameters, p_penalty_type has not the correct attribute';
+        SIGNAL SQLSTATE '45034';
+    END IF;
+
+    IF NOT fn_IdRegisterExistsFromVehicles(p_vehicle_id) THEN
+        SET v_error_me ssage = 'Error validating sp_AddTeamPenalty parameters, p_vehicle_id is not registered at vehicles table';
+        SIGNAL SQLSTATE '45034';
+    END IF;
+
+    IF NOT fn_IdRegisterExistsFromTeams(p_team_id) THEN
+        SET v_error_message = 'Error validating sp_AddTeamPenalty parameters, p_team_id is not registered at teams table';
+        SIGNAL SQLSTATE '45000';
+    END IF;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
     #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
