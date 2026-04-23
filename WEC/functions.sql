@@ -136,19 +136,3 @@ BEGIN
 END //
 
 DELIMITER ;
-
-DELIMITER $$
-CREATE FUNCTION procesar_array(arr JSON)
-RETURNS VARCHAR(255) DETERMINISTIC
-BEGIN
-  DECLARE i INT DEFAULT 0;
-  DECLARE total INT;
-  DECLARE resultado VARCHAR(255) DEFAULT '';
-  SET total = JSON_LENGTH(arr);
-  WHILE i < total DO
-    SET resultado = CONCAT(resultado, ' ', JSON_UNQUOTE(JSON_EXTRACT(arr, CONCAT('$[', i, ']'))));
-    SET i = i + 1;
-  END WHILE;
-  RETURN TRIM(resultado);
-END$$
-DELIMITER ;
