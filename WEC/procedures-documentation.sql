@@ -14,14 +14,15 @@ BEGIN
     BEGIN
         ROLLBACK;
 
-        IF v_error_message = '' THEN
-            RESIGNAL;
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message;
         ELSE
-            SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message
+            RESIGNAL;
+            SIGNAL SQLSTATE '45034';
         END IF;
     END;
 
-    IF fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type,p_penalty_Value,p_vehicle_id,p_team_id,p_race_id)) THEN
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type,p_penalty_Value,p_vehicle_id,p_team_id,p_race_id)) THEN
         SET v_error_message = 'Error validating sp_AddTeamPenalty parameters, there are empty or null parameters';
         SIGNAL SQLSTATE '45034';
     END IF;
@@ -38,35 +39,58 @@ BEGIN
 
     IF NOT fn_IdRegisterExistsFromTeams(p_team_id) THEN
         SET v_error_message = 'Error validating sp_AddTeamPenalty parameters, p_team_id is not registered at teams table';
-        SIGNAL SQLSTATE '45000';
+        SIGNAL SQLSTATE '45034';
     END IF;
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    IF NOT fn_IdRegisteredFromRaces(p_reace_id) THEN
+        SET v_error_message = "Error validating sp_AddTeamPenalty parameters, p_race_id is not registered at races table";
+        SIGNAL SQLSTATE '45034'
+    END IF;
 
-    #Declarar un exit handler for SQLEXCEPTION
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45034' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
-    
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar que ningun string este vacio (futura funcion)
-    #Comprobar que "penalty_type" esta dentro de los valores ['POINTS','TIME','DSQ','DNF'] (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_vehicle_id" existe en la tabla de vehiculos (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_team_id" existe en la tabla de equipos (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_race_id" existe en la tabla de carreras (funcion futura)
-    
-    ##Comienzo de transaccion
+    START TRANSACTION;
 
-    #Comprobar el estado del penalty (POINTS,TIME,DNF)
-    #-Se calcula los puntos de resultado restado al del penalty y se actualiza
-    #-Despues de calcular e insertar, insertar en en la variable affected_rows cuantos registros fueron afectados
-    #-En el caso de que no sea correcto el estado de penalty enviar un signal sqlstate 45000
+    IF (p_penalty_type = 'POINTS') THEN
+        UPDATE results res
+        SET 
+            res.penalty_points_team = GREATEST(0, res.penalty_points_team - FLOOR(p_penalty_value)),
+            res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(p_penalty_value))
+        WHERE res.id_vehicle = p_vehicle_id
+            AND res.id_team = p_team_id
+            AND res.id_race = p_race_id;
+        
+        SET affected_rows = ROW_COUNT();
 
-    #Comprobar si affected_rows tiene registros afectados
-    #-En el caso de no tenerlosenviar un signal sqlstate avisando de esto
+    ELSEIF (p_penalty_type = 'TIME') THEN
+        UPDATE results res
+        SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(p_penalty_value))
+        WHERE res.id_vehicle = p_vehicle_id
+            AND res.id_team = p_team_id
+            AND res.id_race = p_race_id;
+        
+        SET affected_rows = ROW_COUNT();
+        
+    ELSEIF (p_penalty_type = 'DNF' || p_penalty_type = 'DSQ') THEN
+        UPDATE results res
+        SET 
+            res.penalty_time = SEC_TO_TIME(0),
+            res.penalty_points_team = 0,
+            res.penalty_points_pilot = 0
+        WHERE res.id_vehicle = p_vehicle_id
+            AND res.id_team = p_team_id
+            AND res.id_race = p_race_id;
 
-    ##Final de transaccion
+        SET v_affected_rows = ROW_COUNT();
+
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
+    END IF;
+
+    IF NOT (CheckAfectedRowsCount(v_affected_rows)) THEN 
+        SET v_error_message = 'Error executing sp_AddTeamPenalty, there was not affected rows at the transaction'
+        SIGNAL SQLSTATE '45034'
+    END IF;
+
+    COMMIT;
 
 END //
 
@@ -76,30 +100,71 @@ MODIFIES SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Applies a penalty (POINTS, TIME, DSQ, DNF) to a pilot result. Updates the result record for the given result id. Called by sp_ProcessResultPenalty.'
 BEGIN
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45035' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
 
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar que ningun string este vacio (futura funcion)
-    #Comprobar que "p_penalty_type" esta dentro de los valores ['POINTS','TIME','DSQ','DNF'] (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_result_id" existe en la tabla de resultados (funcion futura)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
 
-    ##Comienzo de la transaccion
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45035' SET MESSAGE = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45035';
+        END IF;
+    END;
 
-    #Comprobar el estado del penalty (POINTS,TIME,DNF)
-    #-Se calcula los puntos de resultado restado al del penalty y se actualiza
-    #-Despues de calcular e insertar, insertar en en la variable affected_rows cuantos registros fueron afectados
-    #-En el caso de que no sea correcto el estado de penalty enviar un signal sqlstate 45000
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type, p_penalty_value, p_result_id)) THEN
+        SET v_error_message = 'Error validating sp_AddPilotPenalty parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45035'
+    END IF;
 
-    #Comprobar si affected_rows tiene registros afectados
-    #-En el caso de no tenerlosenviar un signal sqlstate avisando de esto
+    IF NOT fn_CheckPenaltyTypeCorrect(p_penalty_type) THEN
+        SET v_error_message = 'Error validating sp_AddPilotPenalty parameters, p_penalty_type has not the correct attribute';
+        SIGNAL SQLSTATE '45035';
+    END IF;
 
-    ##Final de transaccion
+    IF NOT fn_IdRegisteredFromResults(p_result_id) THEN
+        v_error_message = 'Error validating sp_AddPilotPenalty parameters, p_result_id is not registered at results table'
+    END IF;
+
+    START TRANSACTION;
+
+    IF (p_penalty_type = 'POINTS') THEN
+        UPDATE results res
+        SET res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(p_penalty_value))
+        WHERE res.id_result = p_result_id;
+
+        SET v_affected_rows = ROW_COUNT();
+
+    ELSEIF (p_penalty_type = 'TIME') THEN
+        UPDATE results res
+        SET res.penalty_time = ADDTIME(res.penalty_time, SEC_TO_TIME(p_penalty_value))
+        WHERE res.id_result = p_result_id;
+
+        SET v_affected_rows = ROW_COUNT();
+
+    ELSEIF (penalp_penalty_typety_type = 'DNF' || p_penalty_type = 'DSQ') THEN
+        UPDATE results res
+        SET 
+            res.penalty_time = SEC_TO_TIME(0),
+            res.penalty_points_pilot = 0
+        WHERE res.id_result = p_result_id;
+
+        SET v_affected_rows = ROW_COUNT();
+
+    ELSE
+        SIGNAL SQLSTATE '45035' SET MESSAGE_TEXT = 'Invalid penalty_type';
+    END IF;
+
+    IF NOT (CheckAfectedRowsCount(v_affected_rows)) THEN
+        SET v_error_message = 'Error executing sp_AddPilotPenalty, there was not affected rows at the transaction'
+        SIGNAL SQLSTATE '45035'
+    END IF;
+
+    COMMIT;
 
 END //
 
@@ -110,16 +175,36 @@ SQL SECURITY INVOKER
 COMMENT 'Retrieves type, applies_to and value of a penalty by id. Outputs results into OUT parameters. Called by sp_ProcessResultPenalty.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
 
-    #Declarar un exit handler for SQLEXCEPTION
-        #Signal SQLSTATE '45036' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
-    
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar con un if exists y un select si el parametro "p_id_penalty" existe en la tabla de penalties (funcion futura)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
 
-    #Select de penalty_type, penalty_applies_to y penalty_value de la tabla de penalties donde el id coincida con "p_id_penalty" guardando los resultados en los parametros OUT "p_penalty_type", "p_penalty_applies" y "p_penalty_value"
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45036' SET MESSAGE = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45036';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_penalty)) THEN
+        SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45036';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromPenalties(p_id_penalty) THEN
+        SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, p_id_penalty is not registered at penalties table';
+        SIGNAL SQLSTATE '45036';
+    END IF;
+
+    SELECT
+        pen.penalty_type INTO p_penalty_type,
+        pen.penalty_applies_to INTO p_penalty_applies,
+        pen.penalty_value INTO p_penalty_value
+    FROM penalties pen
+    WHERE pen.id_penalty = p_id_penalty;
 
 END //
 
@@ -129,6 +214,24 @@ READS SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Retrieves the foreign key ids (vehicle, team, race) of a result record by id. Outputs results into OUT parameters. Called by sp_ProcessResultPenalty.'
 BEGIN
+
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45037' SET MESSAGE = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45037';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_result_id)) THEN
+        SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, there are empty or null parameters';
+    END IF;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
 

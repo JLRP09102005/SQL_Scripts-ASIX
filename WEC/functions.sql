@@ -124,14 +124,14 @@ BEGIN
 
         SET sentence = JSON_UNQUOTE(JSON_EXTRACT(arr, CONCAT('$[', i, ']')));
         IF sentence = "" OR sentence = null THEN
-            RETURN 1;
+            RETURN 0;
         END IF;
 
         SET i = i + 1;
 
     END WHILE;
 
-    RETURN 0;
+    RETURN 1;
 
 END //
 
@@ -149,30 +149,63 @@ END //
 CREATE FUNCTION fn_IdRegisterExistsFromVehicles (p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
 
-    DECLARE select_result INT DEFAULT 0;
-
-    SELECT 1 INTO select_result
+    SELECT 1 INTO v_select_result
     FROM vehicles
     WHERE id_vehicle = p_id
     LIMIT 1;
 
-    RETURN select_result;
-
+    RETURN v_select_result;
 END //
 
 CREATE FUNCTION fn_IdRegisterExistsFromTeams(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
-    DECLARE select_result INT DEFAULT 0;
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
 
-    SELECT 1 INTO select_result
+    SELECT 1 INTO v_select_result
     FROM teams
     WHERE id_team = p_id
     LIMIT 1;
 
-    RETURN select_result;
-
+    RETURN v_select_result;
 END
+
+CREATE FUNCTION fn_IdRegisteredFromRaces(p_id INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
+
+    SELECT 1 INTO v_select_result
+    FROM races
+    WHERE id_race = p_id;
+
+    REUTRN v_select_result;
+END //
+
+CREATE FUNCTION fn_IdRegisteredFromResults(p_id INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
+
+    SELECT 1 INTO v_select_result
+    FROM results
+    WHERE id_result = p_id;
+
+    RETURN v_select_result;
+END //
+
+CREATE FUNCTION fn_IdRegisteredFromPenalties(p_id INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
+
+    SELECT 1 INTO v_select_result
+    FROM penalties
+    WHERE id_penalty = p_id;
+
+    RETURN v_select_result;
+END //
 
 DELIMITER ;
