@@ -11,13 +11,24 @@ BEGIN
     RETURN (row_count != 0);
 END //
 
+CREATE FUNCTION CheckNegativeValues (value INT)
+RETURNS TINYINT(1) DETERMINISTIC
+COMMENT 'Check if the parameter given is negative'
+BEGIN
+    IF value < 0 THEN
+        RETURN 1;
+    ELSE
+        RETURN 0;
+    END IF;
+END //
+
 CREATE FUNCTION UnderMaxLimit ( IN numToCheck INT, IN maxNumber INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if a value is under his max limit'
 DETERMINISTIC
 NO SQL
 BEGIN
-    RETURN (numToCheck < maxNumber );
+    RETURN (numToCheck < maxNumber);
 END //
 
 CREATE FUNCTION GetTeamMechanicsNumber ( IN search_team_id INT )
@@ -109,6 +120,40 @@ BEGIN
     END IF;
 
     RETURN calc_result;
+END //
+
+CREATE FUNCTION CircuitCorrectLength (p_circuit_length DECIMAL(3,2))
+RETURNS TINYINT(1) NOT DETERMINISTIC
+COMMENT 'Validate that the circuit length is reasonable'
+BEGIN
+    IF p_circuit_length > 3.5 AND p_circuit_length < 15000 THEN
+        RETURN 1;
+    ELSE
+        RETURN 0;
+    END IF;
+END //
+
+CREATE FUNCTION ValidateCircuitDirection (p_circuit_direction VARCHAR(50))
+RETURNS TINYINT(1) DETERMINISTIC
+COMMENT 'Validate that the circuit direction has 1 of the posible circuit directions'
+BEGIN
+    IF p_circuit_direction IN ('CLOCKWISE','COUNTERCLOCKWISE') THEN
+        RETURN 1;
+    ELSE
+        RETURN 0;
+    END IF;
+END
+
+CREATE FUNCTION GetAnyCircuitRegistryByName (p_circuit_name VARCHAR(50))
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE p_select_result INT DEFAULT 0;
+
+    SELECT 1 INTO p_select_result
+    FROM circuits
+    WHERE circuits_name = p_circuit_name;
+
+    RETURN p_select_result;
 END //
 
 CREATE FUNCTION fn_CheckNullEmptyArray (array JSON)

@@ -15,7 +15,7 @@ BEGIN
         ROLLBACK;
 
         IF NOT v_error_message = '' THEN
-            SIGNAL SQLSTATE '45034' SET MESSAGE = v_error_message;
+            SIGNAL SQLSTATE '45034' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
             SIGNAL SQLSTATE '45034';
@@ -109,7 +109,7 @@ BEGIN
         ROLLBACK;
 
         IF NOT v_error_message = '' THEN
-            SIGNAL SQLSTATE '45035' SET MESSAGE = v_error_message;
+            SIGNAL SQLSTATE '45035' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
             SIGNAL SQLSTATE '45035';
@@ -182,7 +182,7 @@ BEGIN
         ROLLBACK;
 
         IF NOT v_error_message = '' THEN
-            SIGNAL SQLSTATE '45036' SET MESSAGE = v_error_message;
+            SIGNAL SQLSTATE '45036' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
             SIGNAL SQLSTATE '45036';
@@ -222,7 +222,7 @@ BEGIN
         ROLLBACK;
 
         IF NOT v_error_message = '' THEN
-            SIGNAL SQLSTATE '45037' SET MESSAGE = v_error_message;
+            SIGNAL SQLSTATE '45037' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
             SIGNAL SQLSTATE '45037';
@@ -230,19 +230,21 @@ BEGIN
     END;
 
     IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_result_id)) THEN
-        SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, there are empty or null parameters';
+        SET v_error_message = 'Error validating sp_GetResultsBasicInfo parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45037';
     END IF;
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
+    IF NOT fn_IdRegisteredFromResults(p_result_id) THEN
+        SET v_error_message = 'Error validating sp_GetResultsBasicInfo parameters, p_result_id is not registered at results table';
+        SIGNAL SQLSTATE '45037';
+    END IF;
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Signal SQLSTATE '45037' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
-    
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar con un if exists y un select si el parametro "p_result_id" existe en la tabla de resultados (funcion futura)
-
-    #Select de id_vehicle, id_team e id_race de la tabla de results donde el id coincida con "p_result_id" guardando los resultados en los parametros OUT "p_vehicle_id", "p_team_id" y "p_race_id"
+    SELECT
+        res.id_vehicle INTO p_vehicle_id,
+        res.id_team INTO p_team_id,
+        res.id_race INTO p_race_id
+    FROM results res
+    WHERE res.id_result = p_result_id;
 
 END //
 
@@ -253,28 +255,47 @@ SQL SECURITY INVOKER
 COMMENT 'Orchestrates penalty application to a result. Retrieves penalty and result data, then delegates to sp_AddPilotPenalty or sp_AddTeamPenalty based on penalty target.'
 BEGIN
 
-    #Declarar una variable "penalty_type" de tipo VARCHAR(20) por defecto con valor 'POINTS'
-    #Declarar una variable "penalty_applies" de tipo VARCHAR(20) por defecto con valor 'PILOT'
-    #Declarar una variable "penalty_value" de tipo DECIMAL(7,2) por defecto con valor 0
-    #Declarar una variable "vehicle_id" de tipo INT por defecto con valor NULL
-    #Declarar una variable "team_id" de tipo INT por defecto con valor NULL
-    #Declarar una variable "race_id" de tipo INT por defecto con valor NULL
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
+    DECLARE v_penalty_type VARCHAR(20) DEFAULT 'POINTS';
+    DECLARE v_penalty_applies VARCHAR(20) DEFAULT 'PILOT';
+    DECLARE v_penalty_value DECIMAL(7,2) DEFAULT 0;
+    DECLARE v_vehicle_id INT DEFAULT NULL;
+    DECLARE v_team_id INT DEFAULT NULL;
+    DECLARE v_race_id INT DEFAULT NULL;
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Signal SQLSTATE '45038' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
+    DELCARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45038' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45038'
+        END IF;
+    END;
 
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar con un if exists y un select si el parametro "p_id_penalty" existe en la tabla de penalties (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_result_id" existe en la tabla de resultados (funcion futura)
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_penalty, p_id_result)) THEN
+        SET v_error_message = 'Error validating sp_ProcessResultPenalty parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45038';
+    END IF;
 
-    #LLamada al procedimiento GetPenaltyBasicInfo
-    #LLamada al procedimiento GetResultsForeignInfo
+    IF NOT fn_IdRegisteredFromPenalties(p_id_penalty) THEN
+        SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, p_id_penalty is not registered at penalties table';
+        SIGNAL SQLSTATE '45038';
+    END IF
 
-    #Condicional if que compruebe si la penalizacion se aplica al piloto o al equipo
-    #-En el caso de que se aplique al piloto se llama al procedimiento AddPilotPenalty
-    #-En el caso de que se aplique al equipo se llama al procedimiento AddTeamPenalty
+    IF NOT fn_IdRegisteredFromResults(p_id_result) THEN
+        SET v_error_message = 'Error validating sp_GetResultsBasicInfo parameters, p_result_id is not registered at results table';
+        SIGNAL SQLSTATE '45038';
+    END IF;
+
+    CALL sp_GetPenaltyBasicInfo(p_id_penalty, v_penalty_type, v_penalty_applies, v_penalty_value);
+    CALL sp_GetResultsForeignInfo(p_id_result, v_vehicle_id, v_team_id, v_race_id);
+
+    IF (v_penalty_applies = 'PILOT') THEN
+        CALL AddPilotPenalty(v_penalty_type, v_penalty_value, p_id_result);
+    ELSE
+        CALL sp_AddTeamPenalty(v_penalty_type, v_penalty_value, v_vehicle_id, v_team_id, v_race_id);
+    END IF;
 
 END //
 
@@ -285,28 +306,59 @@ SQL SECURITY INVOKER
 COMMENT 'Updates the points of a result record for a given race and result id. Called by sp_UpdateLeaderPoints.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT default 0;
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45039' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
 
-    #Comprobar que ninguno de los parametros sea null (futura funcion)
-    #Comprobar con un if exists y un select si el parametro "p_race_id" existe en la tabla de carreras (funcion futura)
-    #Comprobar con un if exists y un select si el parametro "p_result_id" existe en la tabla de resultados (funcion futura)
-    #Comprobar que "p_result_points" no sea un valor negativo (futura funcion)
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45039' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45039';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_race_id, p_result_id, p_result_points)) THEN
+        SET v_error_message = 'Error validating sp_AddResultPoints parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45039';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromRaces(p_race_id) THEN
+        SET v_error_message = 'Error validating sp_AddResultsPoints parameters, p_race_id is not registered at races table';
+        SIGNAL SQLSTATE '45039';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromResults(p_result_id) THEN
+        SET v_error_message = 'Error validating sp_AddResultsPoints parameters, p_result_id is not registered at results table';
+        SIGNAL SQLSTATE '45039';
+    END IF;
+
+    IF CheckNegativeValues(p_result_points) THEN
+        SET v_error_message = 'Error validating sp_AddResultsPoints parameters, p_result_points should not be a negative value';
+        SIGNAL SQLSTATE '45039'
+    END IF;
+
+    START TRANSACTION;
+    UPDATE results res SET
+        res.base_points_team = p_result_points,
+        res.base_points_pilot = p_result_points,
+        res.penalty_points_team = p_result_points,
+        res.penalty_points_pilot = p_result_points
+    WHERE 
+        res.id_race = p_race_id AND
+        res.id_result = p_result_id;
     
-    ##Comienza la transaccion
+    SET v_affected_rows = ROW_COUNT();
 
-    #Actualizar los puntos en la tabla de results donde el id del resultado coincida con "p_result_id" y el id de la carrera coincida con "p_race_id"
+    IF NOT v_affected_rows != 0 THEN
+        SET v_error_message = 'Error executing sp_AddResultsPoints, there was no affected rows at the transaction';
+        SIGNAL SQLSTATE '45001';
+    END IF;
 
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se insertaron los datos y guarda el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
-
-    ##Final de la transaccion
+    COMMIT;
 
 END //
 
@@ -317,44 +369,61 @@ SQL SECURITY INVOKER
 COMMENT 'Iterates over the top 10 results of a race and assigns leaderboard points to each. Uses fn_GetPositionsPointsMultiplier and fn_GetLeaderboardPointsCalc to calculate points. Calls sp_AddResultPoints to persist each result.'
 BEGIN
 
-    #Declarar una variable "v_done" de tipo TINYINT(1) y valor por defecto 0
-    #Declarar una variable "v_cur_id_result" de tipo INT con valor por defecto 0
-    #Declarar una variable "v_position" de tipo TINYINT con valor por defecto 1
-    #Declarar una variable "v_position_points" de tipo TINYINT con valor por defecto 25
-    #Declarar una variable "v_position_points_mult" de tipo DECIMAL(3,1) CON VALOR POR DEFECTO 1
-    #Declarar una variable "v_points_calc_result" de tipo TINYINT con valor por defecto 0
-    #Declarar una variable "v_new_id_race" de tipo INT con valor por defecto NULL
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
+    DECLARE v_done TINYINT(1) DEFAULT 0;
+    DECLARE v_cur_id_result INT DEFAULT 0;
+    DECLARE v_position TINYINT DEFAULT 1;
+    DECLARE v_position_points TINYINT DEFAULT 25;
+    DECLARE v_position_points_mult DECIMAL(3,1) DEFAULT 1;
+    DECLARE v_points_calc_result TINYINT DEFAULT 0;
+    DECLARE v_new_id_race INT DEFAULT NULL;
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
 
-    #Declarar un cursor para un nselect de todos los resultados de una carrera X
+    SET v_new_id_race = p_new_id_race;
 
-    #Declarar un continue handler para un valor not found con un set de v_done a 1
-
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Cerrar el cursor en caso de que este abierto
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45042' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
-
-    #Comprobar con un if exists y un select si el parametro "p_new_id_race" existe en la tabla de carreras (funcion futura)
+    DECLARE cur_times CURSOR FOR
+        SELECT 
+            res.id_result
+        FROM results res
+        WHERE res.id_race = v_new_id_race
+        ORDER BY res.penalty_time ASC;
     
-    ##Comienza la transaccion
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        CLOSE cur_times;
+        ROLLBACK;
 
-    #Llamada a la funcion fn_GetPositionsPointsMultiplier para guardar el resultado en la variable v_position_points_mult
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45042' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45042';
+        END IF;
+    END;
 
-    #Abrir el cursor
-    ##Bucle while para las 10 primeras iteraciones de posiciones y mientras que v_done sea diferente de 1
-        #Hacer un fetch a la variable v_cur_id_result del cursor cur_times\
-        #Llamada a la funcion fn_GetLeaderboardPointsCalc e introducir el resultado en la variable v_points_calc_result
+    IF NOT fn_IdRegisteredFromRaces(p_new_id_race) THEN
+        SET v_error_message = 'Error validating sp_UpdateLeaderPoints parameters, p_new_id_race is not registered at races table';
+        SIGNAL SQLSTATE '45042';
+    END IF;
 
-        ##Condicion if que comprueba que v_done sea diferente de 1
-            #Si es diferente de 1, se llama al procedimiento AddResultPoints
-        
-        #Se suma v_position + 1
+    START TRANSACTION;
+
+    SELECT GetPositionsPointsMultiplier(v_new_id_race) INTO v_position_points_mult;
     
-    #Se cierra el cursor
+    OPEN cur_times;
+    WHILE (v_done != 1 AND v_position <= 10) DO
+        FETCH cur_times INTO v_cur_id_result;
+        SELECT GetLeaderboardPointsCalc(v_position, v_position_points, v_position_points_mult) INTO v_points_calc_result;
 
-    ##Final de la transaccion
+        IF(v_done != 1) THEN
+            CALL sp_AddResultPoints(v_new_id_race, v_cur_id_result, v_points_calc_result);
+        END IF;
+
+        SET v_position = v_position + 1;
+    END WHILE;
+    CLOSE cur_times;
+
+    COMMIT;
 
 END //
 
@@ -365,33 +434,57 @@ SQL SECURITY INVOKER
 COMMENT 'Inserts a new circuit record into the circuits table. Validates all input data including direction enum and length range. Returns execution state via p_spstate.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT default 0;
 
-    #Declarar un continue handler for NOT FOUND con un signal que de un mensaje diciendo que el circuito no esta duplicado
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Hacer un set a la variable "p_spstate" de valor 0
-        #Rollback de los cambios de la transaccion
-        #Signal SQLSTATE '45001' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
 
-    #Comprobar con un if que ninguno de los datos sea null (futura funcion)
-    #Comprobar que ningun string este vacio (futura funcion)
-    #Comprobar con un if que la longitud del circuito sea razonable (futura funcion)
-    #Comprobar que la direccion del circuito esta dentro de dos valores concretos ['CLOCKWISE','COUNTERCLOCKWISE'] (futura funcion)
-    #Comprobar que no haya un registro ya existente del circuito en la tabla de circuitos con un select (futura funcion)
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45001' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45001';
+        END IF;
+    END;
 
-    ##Comienza la transaccion
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_circuit_name, p_country, p_length_km, p_direction)) THEN
+        SET v_error_message = 'Error validating sp_InsertCircuitData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45001';
+    END IF;
 
-    #Insertar los datos comprobados en la tabla de circuitos
+    IF NOT CircuitCorrectLength(p_length_km) THEN
+        SET v_error_message = 'Error validating sp_InsertCircuitData parameters, the circuit length is out or under the bounds';
+        SIGNAL SQLSTATE '45001';
+    END IF;
 
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se insertaron los datos y guarda el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
+    IF NOT ValidateCircuitDirection(p_direction) THEN
+        SET v_error_message = 'Error validating sp_InsertCircuitData parameters, the circuit direction has not a correct value';
+        SIGNAL SQLSTATE '45001';
+    END IF;
 
-    ##Fin de la transaccion
+    IF GetAnyCircuitRegistryByName(p_circuit_name) THEN
+        SET v_error_message = 'Error validating sp_InsertCircuitData parameters, already exists a circuit registry with this name';
+        SIGNAL SQLSTATE '45001';
+    END IF;
 
-    #Hacer un set a la variable "p_spstate" de valor 1
+    START TRANSACTION;
+
+    INSERT INTO circuits (circuit_name,country,length_km,direction)
+        VALUES(p_circuit_name, p_country, p_length_km, p_direction);
+    
+    SET v_affected_rows = ROW_COUNT();
+
+    IF NOT v_affected_rows != 0 THEN
+        SET v_error_message = 'Error executing sp_InsertCircuitData, there was no affected rows at the transaction';
+        SIGNAL SQLSTATE '45001';
+    END IF;
+
+    COMMIT;
+
+    SET p_spstate = 1;
 
 END //
 
@@ -402,34 +495,61 @@ SQL SECURITY INVOKER
 COMMENT 'Updates an existing circuit record by id. Validates all input data including direction enum, length range and name uniqueness. Returns execution state via p_spstate.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT default 0;
 
-    #Declarar un continue handler for NOT FOUND con un signal que dé un mensaje diciendo que el circuito no existe
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Hacer un set a la variable "p_spstate" de valor 0
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45012' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
 
-    #Comprobar con un if que ninguno de los datos sea null (futura funcion)
-    #Comprobar que ningun string este vacio (futura funcion)
-    #Comprobar con un if que la longitud del circuito sea razonable (futura funcion)
-    #Comprobar que la direccion del circuito esta dentro de dos valores concretos ['CLOCKWISE','COUNTERCLOCKWISE'] (futura funcion)
-    #Comprobar que existe un registro con "p_circuit_id" en la tabla de circuitos con un SELECT (futura funcion)
-    #Comprobar que el nuevo nombre no este duplicado en otro registro distinto al que se actualiza (futura funcion)
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45012' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45012';
+        END IF;
+    END;
 
-    ##Comienza la transaccion
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_circuit_name, p_country, p_length_km, p_direction)) THEN
+        SET v_error_message = 'Error validating sp_UpdateCircuitData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45012';
+    END IF;
 
-    #Actualizar los datos comprobados en la tabla de circuitos donde el id coincida con "p_circuit_id"
+    IF NOT CircuitCorrectLength(p_length_km) THEN
+        SET v_error_message = 'Error validating sp_UpdateCircuitData parameters, the circuit length is out or under the bounds';
+        SIGNAL SQLSTATE '45012';
+    END IF;
 
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se actualizaron los datos y guardar el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
+    IF NOT ValidateCircuitDirection(p_direction) THEN
+        SET v_error_message = 'Error validating sp_UpdateCircuitData parameters, the circuit direction has not a correct value';
+        SIGNAL SQLSTATE '45012';
+    END IF;
 
-    ##Fin de la transaccion
+    IF NOT GetAnyCircuitRegistryByName(p_circuit_name) THEN
+        SET v_error_message = 'Error validating sp_UpdateCircuitData parameters, not exists a circuit registry with this name';
+        SIGNAL SQLSTATE '45012';
+    END IF;
 
-    #Hacer un set a la variable "p_spstate" de valor 1
+    START TRANSACTION;
+
+    UPDATE table circuits
+        SET circuit_name = p_circuit_name,
+            country = p_country,
+            length_km = p_length_km,
+            direction = p_direction
+    WHERE id_circuit = p_circuit_id;
+    
+    SET v_affected_rows = ROW_COUNT();
+
+    IF NOT v_affected_rows != 0 THEN
+        SET v_error_message = 'Error executing sp_UpdateCircuitData, there was no affected rows at the transaction';
+        SIGNAL SQLSTATE '45012';
+    END IF;
+
+    COMMIT;
+
+    SET p_spstate = 1;
 
 END //
 
