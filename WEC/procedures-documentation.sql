@@ -465,7 +465,7 @@ BEGIN
         SIGNAL SQLSTATE '45001';
     END IF;
 
-    IF GetAnyCircuitRegistryByName(p_circuit_name) THEN
+    IF fn_GetAnyCircuitRegistryByName(p_circuit_name) THEN
         SET v_error_message = 'Error validating sp_InsertCircuitData parameters, already exists a circuit registry with this name';
         SIGNAL SQLSTATE '45001';
     END IF;
@@ -526,7 +526,7 @@ BEGIN
         SIGNAL SQLSTATE '45012';
     END IF;
 
-    IF NOT GetAnyCircuitRegistryByName(p_circuit_name) THEN
+    IF NOT fn_GetAnyCircuitRegistryByName(p_circuit_name) THEN
         SET v_error_message = 'Error validating sp_UpdateCircuitData parameters, not exists a circuit registry with this name';
         SIGNAL SQLSTATE '45012';
     END IF;
@@ -543,7 +543,7 @@ BEGIN
     SET v_affected_rows = ROW_COUNT();
 
     IF NOT v_affected_rows != 0 THEN
-        SET v_error_message = 'Error executing sp_UpdateCircuitData, there was no affected rows at the transaction';
+        SET v_error_message = 'Error executing sp_UpdateCircuitData, there were no affected rows at the transaction';
         SIGNAL SQLSTATE '45012';
     END IF;
 
@@ -559,6 +559,50 @@ MODIFIES SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Deletes an existing circuit record by id. Validates referential integrity before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
+
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
+
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45013' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45013';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_circuit_id)) THEN
+        SET v_error_message = 'Error validating sp_DeleteCircuitData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45013';
+    END IF;
+
+    IF NOT fn_GetAnyCircuitRegistryById(p_circuit_id) THEN
+        SET v_error_message = 'Error validating sp_DeleteCircuitData parameters, not exists a circuit registry with this id';
+    END IF;
+
+    IF fn_CheckForExtraDependences('circuits', p_circuit_id) THEN
+        SET v_error_message = "Error validating sp_DeleteCircuitData conditions, there are some restrictions";
+        SIGNAL SQLSTATE '45013';
+    END IF
+
+    START TRANSACTION;
+
+    DELETE FROM circuits WHERE id_circuit = p_circuit_id;
+
+    SET v_affected_rows = ROW_COUNT()
+    IF NOT v_affected_rows != 0 THEN
+        SET v_error_message = 'Error executing sp_DeleteCircuitData, there were no affected rows at the transaction';
+        SIGNAL SQLSTATE '45013';
+    END IF;
+
+    COMMIT;
+
+    SET p_spstate = 1;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
     #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
