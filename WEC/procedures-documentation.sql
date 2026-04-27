@@ -85,7 +85,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
-    IF NOT (CheckAfectedRowsCount(v_affected_rows)) THEN 
+    IF NOT v_affected_rows > 0 THEN 
         SET v_error_message = 'Error executing sp_AddTeamPenalty, there was not affected rows at the transaction'
         SIGNAL SQLSTATE '45034'
     END IF;
@@ -159,7 +159,7 @@ BEGIN
         SIGNAL SQLSTATE '45035' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
-    IF NOT (CheckAfectedRowsCount(v_affected_rows)) THEN
+    IF NOT v_affected_rows > 0 THEN
         SET v_error_message = 'Error executing sp_AddPilotPenalty, there was not affected rows at the transaction'
         SIGNAL SQLSTATE '45035'
     END IF;
@@ -353,7 +353,7 @@ BEGIN
     
     SET v_affected_rows = ROW_COUNT();
 
-    IF NOT v_affected_rows != 0 THEN
+    IF NOT v_affected_rows > 0 THEN
         SET v_error_message = 'Error executing sp_AddResultsPoints, there was no affected rows at the transaction';
         SIGNAL SQLSTATE '45001';
     END IF;
@@ -477,7 +477,7 @@ BEGIN
     
     SET v_affected_rows = ROW_COUNT();
 
-    IF NOT v_affected_rows != 0 THEN
+    IF NOT v_affected_rows > 0 THEN
         SET v_error_message = 'Error executing sp_InsertCircuitData, there was no affected rows at the transaction';
         SIGNAL SQLSTATE '45001';
     END IF;
@@ -542,7 +542,7 @@ BEGIN
     
     SET v_affected_rows = ROW_COUNT();
 
-    IF NOT v_affected_rows != 0 THEN
+    IF NOT v_affected_rows > 0 THEN
         SET v_error_message = 'Error executing sp_UpdateCircuitData, there were no affected rows at the transaction';
         SIGNAL SQLSTATE '45012';
     END IF;
@@ -585,7 +585,7 @@ BEGIN
         SET v_error_message = 'Error validating sp_DeleteCircuitData parameters, not exists a circuit registry with this id';
     END IF;
 
-    IF fn_CheckForExtraDependences('circuits', p_circuit_id) THEN
+    IF NOT fn_CheckForExtraDependences('circuits', p_circuit_id) THEN
         SET v_error_message = "Error validating sp_DeleteCircuitData conditions, there are some restrictions";
         SIGNAL SQLSTATE '45013';
     END IF
@@ -595,7 +595,7 @@ BEGIN
     DELETE FROM circuits WHERE id_circuit = p_circuit_id;
 
     SET v_affected_rows = ROW_COUNT()
-    IF NOT v_affected_rows != 0 THEN
+    IF NOT v_affected_rows > 0 THEN
         SET v_error_message = 'Error executing sp_DeleteCircuitData, there were no affected rows at the transaction';
         SIGNAL SQLSTATE '45013';
     END IF;
@@ -603,33 +603,6 @@ BEGIN
     COMMIT;
 
     SET p_spstate = 1;
-
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
-
-    #Declarar un continue handler for NOT FOUND con un signal que dé un mensaje diciendo que el circuito no existe
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Hacer un set a la variable "p_spstate" de valor 0
-        #Rollback a los cambios de la transaccion
-        #Signal SQLSTATE '45013' usando la variable "v_error_message" como mensaje de error
-        #Resignal en caso de ser error de la transaccion
-
-
-    #Comprobar con un if que "p_circuit_id" no sea null (futura funcion)
-    #Comprobar que existe un registro con "p_circuit_id" en la tabla de circuitos con un SELECT (futura funcion)
-    #Comprobar que el circuito no tiene registros dependientes en otras tablas (futura funcion, integridad referencial)
-
-    ##Comienza la transaccion
-
-    #Eliminar de la tabla de circuitos el registro donde el id coincida con "p_circuit_id"
-
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se elimino el registro y guardar el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
-
-    ##Fin de la transaccion
-
-    #Hacer un set a la variable "p_spstate" de valor 1
 
 END //
 
@@ -640,33 +613,61 @@ SQL SECURITY INVOKER
 COMMENT 'Inserts a new inscription record into the inscriptions table. Validates all foreign keys (vehicle, race, team) and registration date before insertion. Returns execution state via p_spstate.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Hacer un set a la variable "p_spstate" de valor 0
-        #Rollback de los cambios de la transaccion
-        #Signal SQLSTATE '45002' usando la variable "v_error_message"
-        #Resignal en el caso de que el error sea por parte de la transaccion
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
 
-    #Comprobar que ninguno de los parametros sea nulo (futura funcion)
-    #Comprobar que la fecha de registro sea correcta y cumpla con el formato (futura funcion)
-    #Comprobar que la cantidad de coches a registrar sea mayor que 0 (futura funcion)
-    #Comprobar que el id del vehiculo existe en la tabla de vehiculos con un select (futura funcion)
-    #Comprobar que el id de la carrera existe en la tabla de carreras con un select (futura funcion)
-    #Comprobar que el id del equipo existe con un select a la tabla de equipos (futura funcion)
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45002' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45002';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_vehicle, p_id_race, p_id_team, p_vehicles_quantity, p_registered_at)) THEN
+        SET v_error_message = 'Error validating sp_InsertInscriptionData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45002';
+    END IF;
+
+    IF NOT fn_CheckInscriptionData(p_vehicles_quantity, p_registered_at) THEN
+        SET v_error_message = 'Error validating sp_InsertInscriptionData parameters, incorrect inscription parameters';
+        SIGNAL SQLSTATE '45002'
+    END IF;
+
+    IF NOT fn_IdRegisterExistsFromVehicles(p_id_vehicle) THEN
+        SET v_error_message = 'Error validating sp_InsertInscriptionData parameters, p_id_vehicle is not registered at vehicles table';
+        SIGNAL SQLSTATE '45002';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromRaces(p_id_race) THEN
+        SET v_error_message = 'Error validating sp_InsertInscriptionData parameters, p_id_race is not registered at races table';
+        SIGNAL SQLSTATE '45002';
+    END IF;
+
+    IF NOT fn_IdRegisterExistsFromTeams(p_id_team) THEN
+        SET v_error_message = 'Error validating sp_InsertInscriptionData parameters, p_id_team is not registered at team table';
+        SIGNAL SQLSTATE '45002';
+    END IF;
+
+    START TRANSACTION;
+
+    INSERT INTO inscriptions (id_vehicle, id_race, id_team, vehicles_quantity, registered_at, max_vehicles, max_pilots, max_mechanics)
+        VALUES(p_id_vehicle, p_id_race, p_id_team, p_vehicles_quantity, p_registered_at, 2, 3, 4);
     
-    ##Comienza la transaccion
+    SET v_affected_rows = ROW_COUNT();
+    IF NOT v_affected_rows > 0 THEN
+        SET v_error_message = 'Error executing sp_InsertInscriptionData, there were no affected rows at the transaction';
+        SIGNAL SQLSTATE '45002';
+    END IF;
 
-    #Insert de los datos pasados como parametros a la tabla de inscripciones
+    COMMIT;
 
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se insertaron los datos y guarda el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
-    
-    ##Fin de la transaccion
-
-    #Hacer un set a la variable "p_spstate" de valor 1
+    SET p_spstate = 1;
 
 END //
 
@@ -677,43 +678,122 @@ SQL SECURITY INVOKER
 COMMENT 'Updates an existing inscription record by id. Validates all foreign keys (vehicle, race, team) and registration date before update. Returns execution state via p_spstate.'
 BEGIN
 
-    #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
-    #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
 
-    ##Declarar un exit handler for SQLEXCEPTION
-        #Hacer un set a la variable "p_spstate" de valor 0
-        #Rollback de los cambios de la transaccion
-        #Signal SQLSTATE '45014' usando la variable "v_error_message"
-        #Resignal en el caso de que el error sea por parte de la transaccion
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
 
-    #Comprobar que ninguno de los parametros sea nulo (futura funcion)
-    #Comprobar que la fecha de registro sea correcta y cumpla con el formato (futura funcion)
-    #Comprobar que la cantidad de coches a registrar sea mayor que 0 (futura funcion)
-    #Comprobar que el id de la inscripcion existe en la tabla de inscripciones con un select (futura funcion)
-    #Comprobar que el id del vehiculo existe en la tabla de vehiculos con un select (futura funcion)
-    #Comprobar que el id de la carrera existe en la tabla de carreras con un select (futura funcion)
-    #Comprobar que el id del equipo existe con un select a la tabla de equipos (futura funcion)
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45014' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45015';
+        END IF;
+    END;
 
-    ##Comienza la transaccion
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_vehicle, p_id_race, p_id_team, p_vehicles_quantity, p_registered_at)) THEN
+        SET v_error_message = 'Error validating sp_UpdateInscriptionData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45014';
+    END IF;
 
-    #Actualizar los datos en la tabla de inscripciones donde el id coincida con "p_id_inscription"
+    IF NOT fn_IdRegisterExistsFromVehicles(p_id_vehicle) THEN
+        SET v_error_message = 'Error validating sp_UpdateInscriptionData parameters, p_id_vehicle is not registered at vehicles table';
+    END IF;
 
-    #Hacer un select con la funcion ROW_COUNT y comprobar si se actualizaron los datos y guardar el resultado en "v_affected_rows"
-    #If de comprobacion para ver si "v_affected_rows" es mayor que 0
-        #En el caso de que no lo sea, generar signal que sea captado por el handler
+    IF NOT fn_IdRegisteredFromRaces(p_id_race) THEN
+        SET v_error_message = 'Error validating sp_UpdateInscriptionData parameters, p_id_race is not registered at races table';
+        SIGNAL SQLSTATE '45014';
+    END IF;
 
-    ##Fin de la transaccion
+    IF NOT fn_IdRegisterExistsFromTeams(p_id_team) THEN
+        SET v_error_message = 'Error validating sp_UpdateInscriptionData parameters, p_id_team is not registered at team table';
+        SIGNAL SQLSTATE '45014';
+    END IF;
 
-    #Hacer un set a la variable "p_spstate" de valor 1
+    IF NOT fn_CheckInscriptionData(p_vehicles_quantity, p_registered_at) THEN
+        SET v_error_message = 'Error validating sp_UpdateInscriptionData parameters, incorrect inscription parameters';
+        SIGNAL SQLSTATE '45014';
+    END IF;
+
+    START TRANSACTION;
+
+    UPDATE inscriptions
+        SET vehicles_quantity = p_vehicles_quantity,
+            registered_at = p_registered_at,
+    WHERE id_vehicle = p_id_vehicle AND id_race = p_id_race AND id_team = p_id_team;
+
+    SET v_affected_rows = ROW_COUNT();
+    IF NOT v_affected_rows > 0 THEN
+        SET v_error_message = 'Error executing sp_UpdateInscriptionData, there were no affected rows at the transaction';
+        SIGNAL SQLSTATE '45014';
+    END IF
+
+    COMMIT;
+
+    SET p_spstate = 1;
 
 END //
 
-CREATE PROCEDURE sp_DeleteInscriptionData (IN p_id_inscription INT, OUT p_spstate TINYINT)
+CREATE PROCEDURE sp_DeleteInscriptionData (IN p_id_vehicle INT, IN p_id_race INT, IN p_id_team INT, OUT p_spstate TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Deletes an existing inscription record by id. Validates referential integrity before deletion to prevent orphaned dependent records. Returns execution state via p_spstate.'
 BEGIN
+
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_affected_rows INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
+
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45015' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45015';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_vehicle, p_id_race, p_id_team)) THEN
+        SET v_error_message = 'Error validating sp_DeleteInscriptionData parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45015';
+    END IF;
+
+    IF NOT fn_CheckForExtraDependences('inscriptions', p_id_vehicle) THEN
+        SET v_error_message = "Error validating sp_DeleteInscriptionData conditions, there are some restrictions";
+        SIGNAL SQLSTATE '45015';
+    END IF
+
+    IF NOT fn_CheckForExtraDependences('inscriptions', p_id_race) THEN
+        SET v_error_message = "Error validating sp_DeleteInscriptionData conditions, there are some restrictions";
+        SIGNAL SQLSTATE '45015';
+    END IF
+
+    IF NOT fn_CheckForExtraDependences('inscriptions', p_id_team) THEN
+        SET v_error_message = "Error validating sp_DeleteInscriptionData conditions, there are some restrictions";
+        SIGNAL SQLSTATE '45015';
+    END IF
+
+    START TRANSACTION;
+
+    DELETE FROM inscriptions 
+    WHERE id_vehicle = p_id_vehicle,
+          id_race = p_id_race,
+          id_team = p_id_team;
+    
+    SET v_affected_rows = ROW_COUNT();
+    IF NOT v_affected_rows > 0 THEN
+        SET v_error_message = 'Error executing sp_DeleteInscriptionData, there were no affected rows at the transaction';
+        SIGNAL SQLSTATE '45015';
+    END IF;
+
+    COMMIT;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
     #Declarar una variable "v_affected_rows" de tipo INT con valor 0 por defecto
@@ -1718,12 +1798,41 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_GetRaceLeaderboard (IN p_id_race INT, IN p_race_date DATETIME)
+CREATE PROCEDURE sp_GetRaceLeaderboardById (IN p_id_race INT)
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Retrieves the leaderboard for a specific race by id and date. Returns pilots ordered by final position, including pilot name, team, vehicle, final time, penalty time, and total points, filtered by the given race date. Reads data only without modifying it.'
 BEGIN
+
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        IF NOT v_error_message = '' THEN
+            SIGNAL SQLSTATE '45040' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+            SIGNAL SQLSTATE '45040';
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_race, p_race_date)) THEN
+        SET v_error_message = 'Error validating sp_GetRaceLeaderboard parameters, there are empty or null parameters';
+        SIGNAL SQLSTATE '45040';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromRaces(p_id_race) THEN
+        SET v_error_message = 'Error validating sp_GetRaceLeaderboard parameters, p_id_race is not registered at races table';
+        SIGNAL SQLSTATE '45040';
+    END IF;
+
+    SELECT
+        res.position AS 'Position',
+        res
+    FROM results res
+    INNER JOIN pilot_inscriptions pilins ON pilins.id_race = res.id_race
+    WHERE res.id_race = p_id_race;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
 

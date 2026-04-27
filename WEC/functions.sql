@@ -265,6 +265,18 @@ BEGIN
     RETURN v_select_result;
 END //
 
+CREATE FUNCTION fn_IdRegisteredFromInscriptions(p_id_vehicle INT, p_id_race INT, p_id_team INT)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    DECLARE v_select_result TINYINT(1) DEFAULT 0;
+
+    SELECT 1 INTO v_select_result
+    FROM inscriptions
+    WHERE id_vehicle = p_id_vehicle AND id_race = p_id_race AND id_team = p_id_team;
+
+    RETURN p_select_result;
+END //
+
 CREATE FUNCTION fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
@@ -310,6 +322,20 @@ BEGIN
         RETURN 0;
     END IF;
 
+END //
+
+CREATE FUNCTION fn_CheckInscriptionData(p_vehicles_quantity TINYINT, p_registration_date TIMESTAMP)
+RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
+    IF NOT p_vehicles_quantity = 2 THEN
+        RETURN 0;
+    END IF;
+
+    IF NOT DATE(p_registration_date) >= DATE(NOW() - INTERVAL 1 DAY) AND NOT DATE(p_registration_date) <= DATE(NOW()) THEN
+        RETURN 0;
+    END IF;
+
+    RETURN 1;
 END //
 
 DELIMITER ;
