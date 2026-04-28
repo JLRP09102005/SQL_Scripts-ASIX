@@ -1829,9 +1829,12 @@ BEGIN
 
     SELECT
         res.position AS 'Position',
-        res
+        pil.pilot_name AS 'PilotName',
+
     FROM results res
     INNER JOIN pilot_inscriptions pilins ON pilins.id_race = res.id_race
+    INNER JOIN pilots pil ON pil.id_pilot = pilins.id_pilot
+    INNER JOIN teams tea ON tea.id_team = 
     WHERE res.id_race = p_id_race;
 
     #Declarar una variable "v_error_message" de tipo VARCHAR(255) con valor '' por defecto
