@@ -318,9 +318,9 @@ BEGIN
 
     IF NOT v_total = 0 THEN
         RETURN 1;
-    ELSE
-        RETURN 0;
     END IF;
+    
+    RETURN 0;
 
 END //
 
