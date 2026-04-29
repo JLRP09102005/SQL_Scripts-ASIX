@@ -125,6 +125,31 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Categories division for pilots';
 
+CREATE TABLE user_roles(
+    id_user_roles INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(100) NOT NULL
+)
+ENGINE=InnoDB
+CHARACTER SET=utf8mb4
+COLLATE=utf8mb4_bin
+COMMENT='Categories for users';
+
+
+CREATE TABLE users(
+    id_user INT UNSIGNED AUTO_INCREMENT primary KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    team_id INT UNSIGNED NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)
+ENGINE=InnoDB
+CHARACTER SET=utf8mb4
+COLLATE=utf8mb4_bin
+COMMENT='User table registry';
+
 --====== INTERMEDIATE TABLES ======
 CREATE TABLE inscriptions(
     id_vehicle INT UNSIGNED NOT NULL,
@@ -163,6 +188,15 @@ ENGINE=InnoDB
 CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Add pilot information to the inscription';
+
+CREATE TABLE user_userrole(
+    id_user INT UNSIGNED NOT NULL,
+    id_user_role INT UNSIGNED NOT NULL
+)
+ENGINE=InnoDB
+CHARACTER SET=utf8mb4
+COLLATE=utf8mb4_bin
+COMMENT='Intermediate table for users and user roles'
 
 --====== FOREIGN KEYS ======
 ALTER TABLE results
