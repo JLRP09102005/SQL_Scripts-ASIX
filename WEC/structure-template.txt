@@ -1,0 +1,73 @@
+database/
+│
+├── 00_main.sql                          # Archivo maestro que ejecuta todo en orden
+│
+├── 01_schema/
+│   ├── 01_tables.sql                    # CREATE TABLE (orden según dependencias)
+│   ├── 02_foreign_keys.sql              # ALTER TABLE ADD CONSTRAINT
+│   ├── 03_indexes.sql                   # CREATE INDEX
+│   └── 04_checks.sql                    # ALTER TABLE ADD CONSTRAINT CHECK
+│
+├── 02_functions/
+│   ├── fn_validation_helpers.sql        # fn_CheckNullEmptyArray, fn_CheckNegativeValues, fn_UnderMaxLimit
+│   ├── fn_domain_checks.sql             # fn_CircuitCorrectLength, fn_ValidateCircuitDirection, fn_CheckPenaltyTypeCorrect
+│   ├── fn_existence_checks.sql          # fn_GetAnyCircuitRegistryByName/ById, fn_IdRegisterExistsFromXXX
+│   ├── fn_business_rules.sql            # fn_CheckInscriptionData, fn_CheckForExtraDependences
+│   ├── fn_getters.sql                   # fn_GetTeamMechanicsNumber, fn_CountInscriptedPilots
+│   └── fn_points_calculation.sql        # fn_GetPositionsPointsMultiplier, fn_GetLeaderboardPointsCalc
+│
+├── 03_procedures/
+│   ├── crud/
+│   │   ├── circuits_crud.sql
+│   │   ├── manufacturers_crud.sql
+│   │   ├── pilot_categories_crud.sql
+│   │   ├── pilots_crud.sql
+│   │   ├── teams_crud.sql
+│   │   ├── vehicles_crud.sql
+│   │   ├── races_crud.sql
+│   │   ├── inscriptions_crud.sql
+│   │   ├── pilots_inscriptions_crud.sql
+│   │   ├── results_crud.sql
+│   │   ├── penalties_crud.sql
+│   │   ├── users_crud.sql
+│   │   └── user_roles_crud.sql
+│   │
+│   ├── business/
+│   │   ├── sp_UpdateLeaderPoints.sql
+│   │   ├── sp_AddTeamPenalty.sql
+│   │   ├── sp_AddPilotPenalty.sql
+│   │   ├── sp_ProcessResultPenalty.sql
+│   │   ├── sp_GetPenaltyBasicInfo.sql
+│   │   ├── sp_GetResultsForeignInfo.sql
+│   │   └── sp_AddResultPoints.sql
+│   │
+│   └── queries/
+│       ├── sp_GetRaceLeaderboardById.sql
+│       ├── sp_GetPilotSeasonStats.sql
+│       └── sp_GetTeamStandings.sql      # (si lo necesitas)
+│
+├── 04_triggers/
+│   ├── trg_calculate_position_points.sql
+│   ├── trg_validate_inscriptions.sql
+│   ├── trg_apply_result_penalties_insert.sql
+│   └── trg_apply_result_penalties_update.sql
+│
+├── 05_seed/
+│   ├── 01_manufacturers.sql             # INSERTs de datos iniciales
+│   ├── 02_circuits.sql
+│   ├── 03_pilot_categories.sql
+│   ├── 04_teams.sql
+│   ├── 05_pilots.sql
+│   ├── 06_vehicles.sql
+│   ├── 07_races.sql
+│   ├── 08_inscriptions.sql
+│   ├── 09_pilots_inscriptions.sql
+│   ├── 10_results.sql
+│   ├── 11_penalties.sql
+│   ├── 12_user_roles.sql
+│   └── 13_users.sql
+│
+├── 06_cleanup/
+│   └── drop_all.sql                     # Para reiniciar la BD (DROP DATABASE o DROP TODO)
+│
+└── 99_sqlstate_legend.sql               # Documentación de códigos de error
