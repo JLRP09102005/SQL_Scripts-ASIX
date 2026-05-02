@@ -1,3 +1,4 @@
+-- Active: 1763026326945@@127.0.0.1@3306@wec
 USE wec;
 DELIMITER //
 
@@ -33,7 +34,7 @@ BEGIN
         
         SET affected_rows = ROW_COUNT();
         
-    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
+    ELSEIF (penalty_type = 'DNF' OR penalty_type = 'DSQ') THEN
         UPDATE results res
         SET 
             res.penalty_time = SEC_TO_TIME(0),
@@ -49,7 +50,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
-    IF (CheckAfectedRowsCount(affected_rows)) THEN 
+    IF (NOT fn_CheckAfectedRowsCount(affected_rows)) THEN 
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
     END IF;
 
@@ -83,7 +84,7 @@ BEGIN
 
         SET affected_rows = ROW_COUNT();
 
-    ELSEIF (penalty_type = 'DNF' || penalty_type = 'DSQ') THEN
+    ELSEIF (penalty_type = 'DNF' OR penalty_type = 'DSQ') THEN
         UPDATE results res
         SET 
             res.penalty_time = SEC_TO_TIME(0),
@@ -96,7 +97,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
-    IF (CheckAfectedRowsCount(affected_rows)) THEN
+    IF (NOT fn_CheckAfectedRowsCount(affected_rows)) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No affected rows';
     END IF;
 
@@ -108,9 +109,13 @@ DETERMINISTIC
 READS SQL DATA
 BEGIN
     SELECT
-        pen.penalty_type INTO penalty_type,
-        pen.penalty_applies_to INTO penalty_applies,
-        pen.penalty_value INTO penalty_value
+        pen.penalty_type,
+        pen.penalty_applies_to,
+        pen.penalty_value
+    INTO
+        penalty_type,
+        penalty_applies,
+        penalty_value
     FROM penalties pen
     WHERE pen.id_penalty = id_penalty;
 END //
@@ -120,9 +125,13 @@ DETERMINISTIC
 READS SQL DATA
 BEGIN
     SELECT
-        res.id_vehicle INTO vehicle_id,
-        res.id_team INTO team_id,
-        res.id_race INTO race_id
+        res.id_vehicle,
+        res.id_team,
+        res.id_race
+    INTO
+        vehicle_id,
+        team_id,
+        race_id
     FROM results res
     WHERE res.id_result = result_id;
 END //
@@ -142,7 +151,7 @@ BEGIN
     CALL sp_GetResultsForeignInfo(id_result, vehicle_id, team_id, race_id);
 
     IF (penalty_applies = 'PILOT') THEN
-        CALL AddPilotPenalty(penalty_type, penalty_value, id_result);
+        CALL sp_AddPilotPenalty(penalty_type, penalty_value, id_result);
     ELSE
         CALL sp_AddTeamPenalty(penalty_type, penalty_value, vehicle_id, team_id, race_id);
     END IF;
@@ -161,9 +170,7 @@ BEGIN
     START TRANSACTION;
     UPDATE results res SET
         res.base_points_team = result_points,
-        res.base_points_pilot = result_points,
-        res.penalty_points_team = result_points,
-        res.penalty_points_pilot = result_points
+        res.base_points_pilot = result_points
     WHERE 
         res.id_race = race_id AND
         res.id_result = result_id;
@@ -180,29 +187,27 @@ BEGIN
     DECLARE v_position_points TINYINT DEFAULT 25;
     DECLARE v_position_points_mult DECIMAL(3,1) DEFAULT 1;
     DECLARE v_points_calc_result TINYINT DEFAULT 0;
-    DECLARE v_new_id_race INT DEFAULT NULL;
-
-    SET v_new_id_race = new_id_race;
 
     DECLARE cur_times CURSOR FOR
         SELECT 
             res.id_result
         FROM results res
-        WHERE res.id_race = v_new_id_race
-        ORDER BY res.penalty_time ASC;
+        WHERE res.id_race = new_id_race
+        ORDER BY ADDTIME(res.final_time, res.penalty_time) ASC;
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        IF v_done !=
-        CLOSE cur_times;
+        IF v_done = 0 THEN
+            CLOSE cur_times;
+        END IF;
 
         ROLLBACK;
         RESIGNAL;
     END;
 
     START TRANSACTION;
-    SELECT GetPositionsPointsMultiplier(v_new_id_race) INTO v_position_points_mult;
+    SELECT GetPositionsPointsMultiplier(new_id_race) INTO v_position_points_mult;
     
     OPEN cur_times;
     WHILE (v_done != 1 AND v_position <= 10) DO
@@ -210,7 +215,7 @@ BEGIN
         SELECT GetLeaderboardPointsCalc(v_position, v_position_points, v_position_points_mult) INTO v_points_calc_result;
 
         IF(v_done != 1) THEN
-            CALL sp_AddResultPoints(v_new_id_race, v_cur_id_result, v_points_calc_result);
+            CALL sp_AddResultPoints(new_id_race, v_cur_id_result, v_points_calc_result);
         END IF;
 
         SET v_position = v_position + 1;

@@ -1,8 +1,8 @@
--- Active: 1762272161423@@127.0.0.1@3306@wec
+-- Active: 1763026326945@@127.0.0.1@3306@wec
 USE WEC;
 DELIMITER //
 
-CREATE FUNCTION CheckAfectedRowsCount ( IN row_count INT )
+CREATE FUNCTION fn_CheckAfectedRowsCount ( row_count INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if there are any row afected by an a DDL or DML sentence'
 NOT DETERMINISTIC
@@ -11,7 +11,7 @@ BEGIN
     RETURN (row_count != 0);
 END //
 
-CREATE FUNCTION CheckNegativeValues (value INT)
+CREATE FUNCTION fn_CheckNegativeValues (value INT)
 RETURNS TINYINT(1) DETERMINISTIC
 COMMENT 'Check if the parameter given is negative'
 BEGIN
@@ -22,7 +22,7 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION UnderMaxLimit ( IN numToCheck INT, IN maxNumber INT )
+CREATE FUNCTION fn_UnderMaxLimit ( numToCheck INT, maxNumber INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if a value is under his max limit'
 DETERMINISTIC
@@ -31,7 +31,7 @@ BEGIN
     RETURN (numToCheck < maxNumber);
 END //
 
-CREATE FUNCTION GetTeamMechanicsNumber ( IN search_team_id INT )
+CREATE FUNCTION fn_GetTeamMechanicsNumber ( search_team_id INT )
 RETURNS TINYINT
 COMMENT 'Returns the number of mechanics for boxes of a team'
 DETERMINISTIC
@@ -49,7 +49,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION CountInscriptedPilots ( IN search_vehicle_id INT, IN search_team_id INT, IN search_race_id INT )
+CREATE FUNCTION fn_CountInscriptedPilots ( search_vehicle_id INT, search_team_id INT, search_race_id INT )
 RETURNS TINYINT
 COMMENT 'Count the number of pilots inscripted in a especific race, team and vehicle'
 DETERMINISTIC
@@ -68,7 +68,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION GetPositionsPointsMultiplier (IN race_id INT)
+CREATE FUNCTION fn_GetPositionsPointsMultiplier (race_id INT)
 RETURNS DECIMAL(3,1)
 COMMENT 'Get the multiplier number of the leader board positions using race id'
 DETERMINISTIC
@@ -95,7 +95,8 @@ BEGIN
     RETURN points_mult;
 END //
 
-CREATE FUNCTION GetLeaderboardPointsCalc (IN position INT, IN base_points INT, IN points_mult DECIMAL(3,2))
+CREATE FUNCTION fn_GetLeaderboardPointsCalc (position INT, base_points INT, points_mult DECIMAL(3,2))
+RETURNS INT
 DETERMINISTIC
 NO SQL
 BEGIN
@@ -122,7 +123,7 @@ BEGIN
     RETURN calc_result;
 END //
 
-CREATE FUNCTION CircuitCorrectLength (p_circuit_length DECIMAL(3,2))
+CREATE FUNCTION fn_CircuitCorrectLength (p_circuit_length DECIMAL(5,2))
 RETURNS TINYINT(1) NOT DETERMINISTIC
 COMMENT 'Validate that the circuit length is reasonable'
 BEGIN
@@ -133,7 +134,7 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION ValidateCircuitDirection (p_circuit_direction VARCHAR(50))
+CREATE FUNCTION fn_ValidateCircuitDirection (p_circuit_direction VARCHAR(50))
 RETURNS TINYINT(1) DETERMINISTIC
 COMMENT 'Validate that the circuit direction has 1 of the posible circuit directions'
 BEGIN
@@ -142,7 +143,7 @@ BEGIN
     ELSE
         RETURN 0;
     END IF;
-END
+END //
 
 CREATE FUNCTION fn_GetAnyCircuitRegistryByName (p_circuit_name VARCHAR(50))
 RETURNS TINYINT(1) DETERMINISTIC
@@ -151,7 +152,7 @@ BEGIN
 
     SELECT 1 INTO p_select_result
     FROM circuits
-    WHERE circuits_name = p_circuit_name;
+    WHERE circuit_name = p_circuit_name;
 
     RETURN p_select_result;
 END //
@@ -168,7 +169,7 @@ BEGIN
     RETURN p_select_result;
 END //
 
-CREATE FUNCTION fn_CheckNullEmptyArray (array JSON)
+CREATE FUNCTION fn_CheckNullEmptyArray (arr JSON)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
 
@@ -180,7 +181,7 @@ BEGIN
     WHILE i < total DO
 
         SET sentence = JSON_UNQUOTE(JSON_EXTRACT(arr, CONCAT('$[', i, ']')));
-        IF sentence = "" OR sentence = null THEN
+        IF sentence = "" OR sentence IS NULL THEN
             RETURN 0;
         END IF;
 
@@ -192,15 +193,15 @@ BEGIN
 
 END //
 
-CREATE FUNCTION fn_CheckPenaltyTypeCorrect (p_penalty_type)
-RETURN TINYINT(1) DETERMINISTIC
+CREATE FUNCTION fn_CheckPenaltyTypeCorrect (p_penalty_type VARCHAR(20))
+RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
-    IF p_penalty_type = 'POINTS' THEN RETURN 0; END IF;
-    IF p_penalty_type = 'TIME' THEN RETURN 0; END IF;
-    IF p_penalty_type = 'DSQ' THEN RETURN 0; END IF;
-    IF p_penalty_type = 'DNF' THEN RETURN 0; END IF;
+    IF p_penalty_type = 'POINTS' THEN RETURN 1; END IF;
+    IF p_penalty_type = 'TIME' THEN RETURN 1; END IF;
+    IF p_penalty_type = 'DSQ' THEN RETURN 1; END IF;
+    IF p_penalty_type = 'DNF' THEN RETURN 1; END IF;
 
-    RETURN 1;
+    RETURN 0;
 END //
 
 CREATE FUNCTION fn_IdRegisterExistsFromVehicles (p_id INT)
@@ -227,7 +228,7 @@ BEGIN
     LIMIT 1;
 
     RETURN v_select_result;
-END
+END //
 
 CREATE FUNCTION fn_IdRegisteredFromRaces(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
@@ -238,7 +239,7 @@ BEGIN
     FROM races
     WHERE id_race = p_id;
 
-    REUTRN v_select_result;
+    RETURN v_select_result;
 END //
 
 CREATE FUNCTION fn_IdRegisteredFromResults(p_id INT)
@@ -274,11 +275,12 @@ BEGIN
     FROM inscriptions
     WHERE id_vehicle = p_id_vehicle AND id_race = p_id_race AND id_team = p_id_team;
 
-    RETURN p_select_result;
+    RETURN v_select_result;
 END //
 
 CREATE FUNCTION fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
+READS SQL DATA
 BEGIN
 
     DECLARE v_dep_table VARCHAR(64) DEFAULT '';

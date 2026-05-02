@@ -1,7 +1,7 @@
--- Active: 1762272161423@@127.0.0.1@3306@wec
+-- Active: 1763026326945@@127.0.0.1@3306@wec
 --====== DATABASE ======
-CREATE DATABASE WEC;
-USE WEC;
+CREATE DATABASE IF NOT EXISTS wec;
+USE wec;
 
 --====== TABLES ======
 CREATE TABLE penalties(
@@ -232,6 +232,10 @@ ALTER TABLE pilots_inscriptions
 ADD CONSTRAINT FK_pilotsinscriptions_pilot FOREIGN KEY (id_pilot) REFERENCES pilots(id_pilot)
     ON DELETE CASCADE,
 ADD CONSTRAINT FK_pilotsinscriptions_inscription FOREIGN KEY (id_vehicle, id_race, id_team) REFERENCES inscriptions(id_vehicle, id_race, id_team)
+    ON DELETE CASCADE;
+
+ALTER TABLE users
+ADD CONSTRAINT FK_users_teams FOREIGN KEY (team_id) REFERENCES teams(id_team)
     ON DELETE CASCADE;
 
 --====== INDEX ======
