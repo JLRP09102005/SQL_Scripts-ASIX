@@ -16,7 +16,7 @@
 -45018 -> Error validating penalty update data
 -45019 -> Error validating penalty delete data
 
--45004 -> Error validating pilot categories insertion data
+-45005 -> Error validating pilot categories insertion data
 -45020 -> Error validating pilot categories update data
 -45021 -> Error validating pilot categories delete data
 
@@ -43,6 +43,14 @@
 -45011 -> Error validating team insertion data
 -45032 -> Error validating team update data
 -45033 -> Error validating team delete data
+
+-45043 -> Error validating user insertion data
+-45044 -> Error validating user update data
+-45045 -> Error validating user delete data
+
+-45046 -> Error validating user_role insertion data
+-45047 -> Error validating user_role update data
+-45048 -> Error validating user_role delete data
 
 -45034 -> Error adding team penalty
 -45035 -> Error adding pilot penalty
