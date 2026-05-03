@@ -340,4 +340,17 @@ BEGIN
     RETURN 1;
 END //
 
+CREATE FUNCTION fn_UserHasRole(p_user_id INT, p_role_name VARCHAR(100))
+RETURNS TINYINT(1)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_count INT;
+    SELECT COUNT(*) INTO v_count
+    FROM user_userrole uu
+    JOIN user_roles ur ON ur.id_user_roles = uu.id_user_role
+    WHERE uu.id_user = p_user_id AND ur.role_name = p_role_name;
+    RETURN IF(v_count > 0, 1, 0);
+END //
+
 DELIMITER ;
