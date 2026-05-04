@@ -2,7 +2,7 @@
 USE wec;
 DELIMITER //
 
-CREATE PROCEDURE sp_AddTeamPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_vehicle_id INT, IN p_team_id INT, IN p_race_id INT )
+CREATE PROCEDURE IF NOT EXISTS sp_AddTeamPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_vehicle_id INT, IN p_team_id INT, IN p_race_id INT )
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
@@ -46,7 +46,7 @@ BEGIN
 
     IF NOT fn_IdRegisteredFromRaces(p_race_id) THEN
         SET v_error_message = "Error validating sp_AddTeamPenalty parameters, p_race_id is not registered at races table";
-        SIGNAL SQLSTATE '45034'
+        SIGNAL SQLSTATE '45034';
     END IF;
 
     START TRANSACTION;
@@ -88,15 +88,15 @@ BEGIN
     END IF;
 
     IF NOT v_affected_rows > 0 THEN 
-        SET v_error_message = 'Error executing sp_AddTeamPenalty, there was not affected rows at the transaction'
-        SIGNAL SQLSTATE '45034'
+        SET v_error_message = 'Error executing sp_AddTeamPenalty, there was not affected rows at the transaction';
+        SIGNAL SQLSTATE '45034';
     END IF;
 
     COMMIT;
 
 END //
 
-CREATE PROCEDURE sp_AddPilotPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_result_id INT )
+CREATE PROCEDURE IF NOT EXISTS sp_AddPilotPenalty ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_result_id INT )
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
@@ -120,7 +120,7 @@ BEGIN
 
     IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type, p_penalty_value, p_result_id)) THEN
         SET v_error_message = 'Error validating sp_AddPilotPenalty parameters, there are empty or null parameters';
-        SIGNAL SQLSTATE '45035'
+        SIGNAL SQLSTATE '45035';
     END IF;
 
     IF NOT fn_CheckPenaltyTypeCorrect(p_penalty_type) THEN
@@ -129,7 +129,7 @@ BEGIN
     END IF;
 
     IF NOT fn_IdRegisteredFromResults(p_result_id) THEN
-        v_error_message = 'Error validating sp_AddPilotPenalty parameters, p_result_id is not registered at results table'
+        SET v_error_message = 'Error validating sp_AddPilotPenalty parameters, p_result_id is not registered at results table';
     END IF;
 
     START TRANSACTION;
@@ -148,7 +148,7 @@ BEGIN
 
         SET v_affected_rows = ROW_COUNT();
 
-    ELSEIF (penalp_penalty_typety_type = 'DNF' OR p_penalty_type = 'DSQ') THEN
+    ELSEIF (p_penalty_type = 'DNF' OR p_penalty_type = 'DSQ') THEN
         UPDATE results res
         SET 
             res.penalty_time = '838:59:59',
@@ -162,15 +162,15 @@ BEGIN
     END IF;
 
     IF NOT v_affected_rows > 0 THEN
-        SET v_error_message = 'Error executing sp_AddPilotPenalty, there was not affected rows at the transaction'
-        SIGNAL SQLSTATE '45035'
+        SET v_error_message = 'Error executing sp_AddPilotPenalty, there was not affected rows at the transaction';
+        SIGNAL SQLSTATE '45035';
     END IF;
 
     COMMIT;
 
 END //
 
-CREATE PROCEDURE sp_GetPenaltyBasicInfo ( IN p_id_penalty INT, OUT p_penalty_type VARCHAR(20), OUT p_penalty_applies VARCHAR(20), OUT p_penalty_value DECIMAL(7,2) )
+CREATE PROCEDURE IF NOT EXISTS sp_GetPenaltyBasicInfo ( IN p_id_penalty INT, OUT p_penalty_type VARCHAR(20), OUT p_penalty_applies VARCHAR(20), OUT p_penalty_value DECIMAL(7,2) )
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -214,7 +214,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_GetResultsForeignInfo ( IN p_result_id INT, OUT p_vehicle_id INT, OUT p_team_id INT, OUT p_race_id INT )
+CREATE PROCEDURE IF NOT EXISTS sp_GetResultsForeignInfo ( IN p_result_id INT, OUT p_vehicle_id INT, OUT p_team_id INT, OUT p_race_id INT )
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -258,7 +258,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_ProcessResultPenalty ( IN p_id_penalty INT, IN p_id_result INT )
+CREATE PROCEDURE IF NOT EXISTS sp_ProcessResultPenalty ( IN p_id_penalty INT, IN p_id_result INT )
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
@@ -273,13 +273,13 @@ BEGIN
     DECLARE v_race_id INT DEFAULT NULL;
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
 
-    DELCARE EXIT HANDLER FOR SQLEXCEPTION
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45038' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
-            SIGNAL SQLSTATE '45038'
+            SIGNAL SQLSTATE '45038';
         END IF;
     END;
 
@@ -291,7 +291,7 @@ BEGIN
     IF NOT fn_IdRegisteredFromPenalties(p_id_penalty) THEN
         SET v_error_message = 'Error validating sp_GetPenaltyBasicInfo parameters, p_id_penalty is not registered at penalties table';
         SIGNAL SQLSTATE '45038';
-    END IF
+    END IF;
 
     IF NOT fn_IdRegisteredFromResults(p_id_result) THEN
         SET v_error_message = 'Error validating sp_GetResultsBasicInfo parameters, p_result_id is not registered at results table';
@@ -309,7 +309,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_AddResultPoints(IN p_race_id INT, IN p_result_id INT, IN p_result_points TINYINT)
+CREATE PROCEDURE IF NOT EXISTS sp_AddResultPoints(IN p_race_id INT, IN p_result_id INT, IN p_result_points TINYINT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
@@ -348,7 +348,7 @@ BEGIN
 
     IF CheckNegativeValues(p_result_points) THEN
         SET v_error_message = 'Error validating sp_AddResultsPoints parameters, p_result_points should not be a negative value';
-        SIGNAL SQLSTATE '45039'
+        SIGNAL SQLSTATE '45039';
     END IF;
 
     START TRANSACTION;
@@ -370,7 +370,7 @@ BEGIN
 
 END //
 
-CREATE PROCEDURE sp_UpdateLeaderPoints (IN p_new_id_race INT)
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateLeaderPoints (IN p_new_id_race INT)
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER

@@ -1,4 +1,4 @@
--- Active: 1763026326945@@127.0.0.1@3306@wec
+-- Active: 1763026326945@@127.0.0.1@3306@wecault_conections
 -- EXECUTE METHOD ---------------
 cd WEC
 mysql -u usuario -p < main.sql
