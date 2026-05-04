@@ -2,7 +2,7 @@
 USE wec;
 DELIMITER //
 
-CREATE TRIGGER trg_validate_inscriptions BEFORE INSERT ON inscriptions
+CREATE TRIGGER IF NOT EXISTS trg_validate_inscriptions BEFORE INSERT ON inscriptions
 FOR EACH ROW
 BEGIN
 

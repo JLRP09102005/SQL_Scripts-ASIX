@@ -8,7 +8,7 @@ DELIMITER //
 -- ============================================================
 
 -- 1.1 Ver todos los circuitos (admin)
-CREATE PROCEDURE sp_admin_all_circuits (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_circuits (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -35,7 +35,7 @@ BEGIN
 END //
 
 -- 1.2 Ver todos los fabricantes (admin)
-CREATE PROCEDURE sp_admin_all_manufacturers (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_manufacturers (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -62,7 +62,7 @@ BEGIN
 END //
 
 -- 1.3 Ver todos los pilotos (admin)
-CREATE PROCEDURE sp_admin_all_pilots (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_pilots (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -92,7 +92,7 @@ BEGIN
 END //
 
 -- 1.4 Ver todos los equipos (admin)
-CREATE PROCEDURE sp_admin_all_teams (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_teams (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -122,7 +122,7 @@ BEGIN
 END //
 
 -- 1.5 Ver todos los vehículos (admin)
-CREATE PROCEDURE sp_admin_all_vehicles (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_vehicles (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -149,7 +149,7 @@ BEGIN
 END //
 
 -- 1.6 Ver todas las carreras (admin)
-CREATE PROCEDURE sp_admin_all_races (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_races (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -179,7 +179,7 @@ BEGIN
 END //
 
 -- 1.7 Ver todas las inscripciones (admin)
-CREATE PROCEDURE sp_admin_all_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_inscriptions (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -211,7 +211,7 @@ BEGIN
 END //
 
 -- 1.8 Ver todas las inscripciones de pilotos (admin)
-CREATE PROCEDURE sp_admin_all_pilots_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_pilots_inscriptions (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -244,7 +244,7 @@ BEGIN
 END //
 
 -- 1.9 Ver todos los resultados (admin)
-CREATE PROCEDURE sp_admin_all_results (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -274,7 +274,7 @@ BEGIN
 END //
 
 -- 1.10 Ver todas las penalizaciones (admin)
-CREATE PROCEDURE sp_admin_all_penalties (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_penalties (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -301,7 +301,7 @@ BEGIN
 END //
 
 -- 1.11 Ver todas las relaciones penalización-resultado (admin)
-CREATE PROCEDURE sp_admin_all_penalties_results (
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_penalties_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -337,7 +337,7 @@ END //
 -- ============================================================
 
 -- 2.1 Ver todas las penalizaciones (commissioner)
-CREATE PROCEDURE sp_commissioner_all_penalties (
+CREATE PROCEDURE IF NOT EXISTS sp_commissioner_all_penalties (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -364,7 +364,7 @@ BEGIN
 END //
 
 -- 2.2 Ver todos los resultados (commissioner)
-CREATE PROCEDURE sp_commissioner_all_results (
+CREATE PROCEDURE IF NOT EXISTS sp_commissioner_all_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -397,7 +397,7 @@ BEGIN
 END //
 
 -- 2.3 Ver todas las carreras (commissioner)
-CREATE PROCEDURE sp_commissioner_all_races (
+CREATE PROCEDURE IF NOT EXISTS sp_commissioner_all_races (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -431,7 +431,7 @@ END //
 -- ============================================================
 
 -- 3.1 Ver todas las penalizaciones (race director)
-CREATE PROCEDURE sp_racedirector_all_penalties (
+CREATE PROCEDURE IF NOT EXISTS sp_racedirector_all_penalties (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -458,7 +458,7 @@ BEGIN
 END //
 
 -- 3.2 Ver todos los resultados (race director)
-CREATE PROCEDURE sp_racedirector_all_results (
+CREATE PROCEDURE IF NOT EXISTS sp_racedirector_all_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -488,7 +488,7 @@ BEGIN
 END //
 
 -- 3.3 Ver todas las relaciones penalización-resultado (race director)
-CREATE PROCEDURE sp_racedirector_all_penalties_results (
+CREATE PROCEDURE IF NOT EXISTS sp_racedirector_all_penalties_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -520,7 +520,7 @@ BEGIN
 END //
 
 -- 3.4 Ver todas las carreras (race director)
-CREATE PROCEDURE sp_racedirector_all_races (
+CREATE PROCEDURE IF NOT EXISTS sp_racedirector_all_races (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -554,7 +554,7 @@ END //
 -- ============================================================
 
 -- 4.1 Ver todas las carreras (analyst)
-CREATE PROCEDURE sp_analyst_all_races (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_races (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -584,7 +584,7 @@ BEGIN
 END //
 
 -- 4.2 Ver todos los circuitos (analyst)
-CREATE PROCEDURE sp_analyst_all_circuits (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_circuits (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -611,7 +611,7 @@ BEGIN
 END //
 
 -- 4.3 Ver todas las categorías de pilotos (analyst)
-CREATE PROCEDURE sp_analyst_all_pilot_categories (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_pilot_categories (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -638,7 +638,7 @@ BEGIN
 END //
 
 -- 4.4 Ver todos los resultados (analyst)
-CREATE PROCEDURE sp_analyst_all_results (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -671,7 +671,7 @@ BEGIN
 END //
 
 -- 4.5 Ver todos los equipos (analyst)
-CREATE PROCEDURE sp_analyst_all_teams (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_teams (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -701,7 +701,7 @@ BEGIN
 END //
 
 -- 4.6 Ver todas las penalizaciones (analyst)
-CREATE PROCEDURE sp_analyst_all_penalties (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_penalties (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -728,7 +728,7 @@ BEGIN
 END //
 
 -- 4.7 Ver todos los pilotos (analyst)
-CREATE PROCEDURE sp_analyst_all_pilots (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_pilots (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -758,7 +758,7 @@ BEGIN
 END //
 
 -- 4.8 Ver todas las inscripciones de pilotos (analyst)
-CREATE PROCEDURE sp_analyst_all_pilots_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_pilots_inscriptions (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -791,7 +791,7 @@ BEGIN
 END //
 
 -- 4.9 Ver todas las inscripciones generales (analyst)
-CREATE PROCEDURE sp_analyst_all_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_inscriptions (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -823,7 +823,7 @@ BEGIN
 END //
 
 -- 4.10 Ver todos los vehículos (analyst)
-CREATE PROCEDURE sp_analyst_all_vehicles (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_vehicles (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -850,7 +850,7 @@ BEGIN
 END //
 
 -- 4.11 Ver todas las relaciones penalización-resultado (analyst)
-CREATE PROCEDURE sp_analyst_all_penalties_results (
+CREATE PROCEDURE IF NOT EXISTS sp_analyst_all_penalties_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -886,7 +886,7 @@ END //
 -- ============================================================
 
 -- 5.1 Ver su propio fabricante
-CREATE PROCEDURE sp_manufacturer_my_data (
+CREATE PROCEDURE IF NOT EXISTS sp_manufacturer_my_data (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -925,7 +925,7 @@ BEGIN
 END //
 
 -- 5.2 Ver equipos que usan su fabricante
-CREATE PROCEDURE sp_manufacturer_my_teams (
+CREATE PROCEDURE IF NOT EXISTS sp_manufacturer_my_teams (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -966,7 +966,7 @@ BEGIN
 END //
 
 -- 5.3 Ver vehículos de equipos de su fabricante
-CREATE PROCEDURE sp_manufacturer_my_vehicles (
+CREATE PROCEDURE IF NOT EXISTS sp_manufacturer_my_vehicles (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1013,7 +1013,7 @@ END //
 -- ============================================================
 
 -- 6.1 Ver vehículos de mi equipo (mechanical)
-CREATE PROCEDURE sp_mechanical_my_vehicles (
+CREATE PROCEDURE IF NOT EXISTS sp_mechanical_my_vehicles (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1049,7 +1049,7 @@ BEGIN
 END //
 
 -- 6.2 Ver circuitos (mechanical, global)
-CREATE PROCEDURE sp_mechanical_all_circuits (
+CREATE PROCEDURE IF NOT EXISTS sp_mechanical_all_circuits (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1076,7 +1076,7 @@ BEGIN
 END //
 
 -- 6.3 Ver carreras (mechanical, global)
-CREATE PROCEDURE sp_mechanical_all_races (
+CREATE PROCEDURE IF NOT EXISTS sp_mechanical_all_races (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1110,7 +1110,7 @@ END //
 -- ============================================================
 
 -- 7.1 Ver mi equipo (team manager)
-CREATE PROCEDURE sp_teammanager_my_team (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_team (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1146,7 +1146,7 @@ BEGIN
 END //
 
 -- 7.2 Ver pilotos de mi equipo
-CREATE PROCEDURE sp_teammanager_my_pilots (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_pilots (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1184,7 +1184,7 @@ BEGIN
 END //
 
 -- 7.3 Ver inscripciones de mi equipo
-CREATE PROCEDURE sp_teammanager_my_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_inscriptions (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1222,7 +1222,7 @@ BEGIN
 END //
 
 -- 7.4 Ver resultados de mi equipo
-CREATE PROCEDURE sp_teammanager_my_results (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_results (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1259,7 +1259,7 @@ BEGIN
 END //
 
 -- 7.5 Ver penalizaciones de mi equipo
-CREATE PROCEDURE sp_teammanager_my_penalties (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_penalties (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1298,7 +1298,7 @@ BEGIN
 END //
 
 -- 7.6 Ver vehículos de mi equipo (team manager puede ver, pero sin especificaciones técnicas completas? Lo dejamos igual que mechanical por ahora)
-CREATE PROCEDURE sp_teammanager_my_vehicles (
+CREATE PROCEDURE IF NOT EXISTS sp_teammanager_my_vehicles (
     IN p_user_id INT
 )
 DETERMINISTIC
@@ -1338,7 +1338,7 @@ END //
 -- ============================================================
 
 -- 8.1 Ver mis propias inscripciones
-CREATE PROCEDURE sp_pilot_my_inscriptions (
+CREATE PROCEDURE IF NOT EXISTS sp_pilot_my_inscriptions (
     IN p_pilot_id INT,
     IN p_user_id INT
 )
@@ -1379,7 +1379,7 @@ BEGIN
 END //
 
 -- 8.2 Ver mis resultados personales
-CREATE PROCEDURE sp_pilot_my_results (
+CREATE PROCEDURE IF NOT EXISTS sp_pilot_my_results (
     IN p_pilot_id INT,
     IN p_user_id INT
 )

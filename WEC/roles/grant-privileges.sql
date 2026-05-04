@@ -49,3 +49,5 @@ GRANT SELECT ON wec.races TO 'readonly-public';
 GRANT SELECT ON wec.circuits TO 'readonly-public';
 GRANT SELECT ON wec.pilots TO 'readonly-public';
 GRANT SELECT ON wec.results TO 'readonly-public';
+
+FLUSH PRIVILEGES;

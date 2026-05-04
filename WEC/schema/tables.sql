@@ -1,6 +1,8 @@
 -- Active: 1763026326945@@127.0.0.1@3306@wec
+USE wec;
+
 --====== TABLES ======
-CREATE TABLE penalties(
+CREATE TABLE IF NOT EXISTS penalties(
     id_penalty INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     penalty_type ENUM('POINTS','TIME','DSQ','DNF') DEFAULT 'POINTS' NOT NULL,
     reason VARCHAR(100) NOT NULL,
@@ -14,7 +16,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Team penalty registry';
 
-CREATE TABLE results(
+CREATE TABLE IF NOT EXISTS results(
     id_result INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     position INT UNSIGNED NOT NULL,
     final_time TIME NOT NULL DEFAULT '00:00:00',
@@ -35,7 +37,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Team result registry';
 
-CREATE TABLE vehicles(
+CREATE TABLE IF NOT EXISTS vehicles(
     id_vehicle INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     model VARCHAR(100) NOT NULL,
     specifications_url VARCHAR(1024)
@@ -45,7 +47,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Teams vehicles specifications';
 
-CREATE TABLE races(
+CREATE TABLE IF NOT EXISTS races(
     id_race INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     event_name VARCHAR(100) NOT NULL,
     event_date DATETIME NOT NULL,
@@ -60,7 +62,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Championship races registry';
 
-CREATE TABLE circuits(
+CREATE TABLE IF NOT EXISTS circuits(
     id_circuit INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     circuit_name VARCHAR(100) NOT NULL,
     country VARCHAR(50) NOT NULL,
@@ -72,7 +74,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Catalog of circuits existing';
 
-CREATE TABLE teams(
+CREATE TABLE IF NOT EXISTS teams(
     id_team INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     team_name VARCHAR(100) UNIQUE NOT NULL,
     mechanics_num TINYINT UNSIGNED NOT NULL,
@@ -86,7 +88,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='List of teams participating in the Championship';
 
-CREATE TABLE manufacturers(
+CREATE TABLE IF NOT EXISTS manufacturers(
     id_manufacturer INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     manufacturer_name VARCHAR(100) NOT NULL,
     manufacturer_country VARCHAR(50) NOT NULL
@@ -96,7 +98,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Manufacturers that sponsor teams';
 
-CREATE TABLE pilots(
+CREATE TABLE IF NOT EXISTS pilots(
     id_pilot INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     pilot_name VARCHAR(100) NOT NULL,
     pilot_age TINYINT UNSIGNED NOT NULL,
@@ -110,7 +112,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Catalog of pilots participating';
 
-CREATE TABLE pilot_categories(
+CREATE TABLE IF NOT EXISTS pilot_categories(
     id_pilot_category INT unsigned AUTO_INCREMENT PRIMARY KEY,
     pilot_category_name VARCHAR(50) NOT NULL,
     pilot_category_description VARCHAR(100) NOT NULL,
@@ -121,7 +123,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Categories division for pilots';
 
-CREATE TABLE user_roles(
+CREATE TABLE IF NOT EXISTS user_roles(
     id_user_roles INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(100) NOT NULL
 )
@@ -131,7 +133,7 @@ COLLATE=utf8mb4_bin
 COMMENT='Categories for users';
 
 
-CREATE TABLE users(
+CREATE TABLE IF NOT EXISTS users(
     id_user INT UNSIGNED AUTO_INCREMENT primary KEY,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL,
@@ -147,7 +149,7 @@ COLLATE=utf8mb4_bin
 COMMENT='User table registry';
 
 --====== INTERMEDIATE TABLES ======
-CREATE TABLE inscriptions(
+CREATE TABLE IF NOT EXISTS inscriptions(
     id_vehicle INT UNSIGNED NOT NULL,
     id_race INT UNSIGNED NOT NULL,
     id_team INT UNSIGNED NOT NULL,
@@ -163,7 +165,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Intermediate table to unify inscription info';
 
-CREATE TABLE penalties_results(
+CREATE TABLE IF NOT EXISTS penalties_results(
     id_penalty INT UNSIGNED NOT NULL,
     id_result INT UNSIGNED NOT NULL,
     PRIMARY KEY(id_penalty, id_result)
@@ -173,7 +175,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Intermediate table for penalties-results';
 
-CREATE TABLE pilots_inscriptions(
+CREATE TABLE IF NOT EXISTS pilots_inscriptions(
     id_pilot INT UNSIGNED NOT NULL,
     id_vehicle INT UNSIGNED NOT NULL,
     id_race INT UNSIGNED NOT NULL,
@@ -185,7 +187,7 @@ CHARACTER SET=utf8mb4
 COLLATE=utf8mb4_bin
 COMMENT='Add pilot information to the inscription';
 
-CREATE TABLE user_userrole(
+CREATE TABLE IF NOT EXISTS user_userrole(
     id_user INT UNSIGNED NOT NULL,
     id_user_role INT UNSIGNED NOT NULL
 )

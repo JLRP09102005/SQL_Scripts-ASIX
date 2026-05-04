@@ -2,7 +2,7 @@
 USE wec;
 DELIMITER //
 
-CREATE TRIGGER trg_calculate_position_points AFTER INSERT ON results
+CREATE TRIGGER IF NOT EXISTS trg_calculate_position_points AFTER INSERT ON results
 FOR EACH ROW
 BEGIN
     CALL sp_UpdateLeaderPoints(NEW.id_race);

@@ -2,7 +2,7 @@
 USE WEC;
 DELIMITER //
 
-CREATE FUNCTION fn_CheckAfectedRowsCount ( row_count INT )
+CREATE FUNCTION IF NOT EXISTS fn_CheckAfectedRowsCount ( row_count INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if there are any row afected by an a DDL or DML sentence'
 NOT DETERMINISTIC
@@ -11,7 +11,7 @@ BEGIN
     RETURN (row_count != 0);
 END //
 
-CREATE FUNCTION fn_CheckNegativeValues (value INT)
+CREATE FUNCTION IF NOT EXISTS fn_CheckNegativeValues (value INT)
 RETURNS TINYINT(1) DETERMINISTIC
 COMMENT 'Check if the parameter given is negative'
 BEGIN
@@ -22,7 +22,7 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION fn_UnderMaxLimit ( numToCheck INT, maxNumber INT )
+CREATE FUNCTION IF NOT EXISTS fn_UnderMaxLimit ( numToCheck INT, maxNumber INT )
 RETURNS TINYINT(1)
 COMMENT 'Check if a value is under his max limit'
 DETERMINISTIC
@@ -31,7 +31,7 @@ BEGIN
     RETURN (numToCheck < maxNumber);
 END //
 
-CREATE FUNCTION fn_GetTeamMechanicsNumber ( search_team_id INT )
+CREATE FUNCTION IF NOT EXISTS fn_GetTeamMechanicsNumber ( search_team_id INT )
 RETURNS TINYINT
 COMMENT 'Returns the number of mechanics for boxes of a team'
 DETERMINISTIC
@@ -49,7 +49,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION fn_CountInscriptedPilots ( search_vehicle_id INT, search_team_id INT, search_race_id INT )
+CREATE FUNCTION IF NOT EXISTS fn_CountInscriptedPilots ( search_vehicle_id INT, search_team_id INT, search_race_id INT )
 RETURNS TINYINT
 COMMENT 'Count the number of pilots inscripted in a especific race, team and vehicle'
 DETERMINISTIC
@@ -68,7 +68,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION fn_GetPositionsPointsMultiplier (race_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_GetPositionsPointsMultiplier (race_id INT)
 RETURNS DECIMAL(3,1)
 COMMENT 'Get the multiplier number of the leader board positions using race id'
 DETERMINISTIC
@@ -95,7 +95,7 @@ BEGIN
     RETURN points_mult;
 END //
 
-CREATE FUNCTION fn_GetLeaderboardPointsCalc (position INT, base_points INT, points_mult DECIMAL(3,2))
+CREATE FUNCTION IF NOT EXISTS fn_GetLeaderboardPointsCalc (position INT, base_points INT, points_mult DECIMAL(3,2))
 RETURNS INT
 DETERMINISTIC
 NO SQL
@@ -123,7 +123,7 @@ BEGIN
     RETURN calc_result;
 END //
 
-CREATE FUNCTION fn_CircuitCorrectLength (p_circuit_length DECIMAL(5,2))
+CREATE FUNCTION IF NOT EXISTS fn_CircuitCorrectLength (p_circuit_length DECIMAL(5,2))
 RETURNS TINYINT(1) NOT DETERMINISTIC
 COMMENT 'Validate that the circuit length is reasonable'
 BEGIN
@@ -134,7 +134,7 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION fn_ValidateCircuitDirection (p_circuit_direction VARCHAR(50))
+CREATE FUNCTION IF NOT EXISTS fn_ValidateCircuitDirection (p_circuit_direction VARCHAR(50))
 RETURNS TINYINT(1) DETERMINISTIC
 COMMENT 'Validate that the circuit direction has 1 of the posible circuit directions'
 BEGIN
@@ -145,7 +145,7 @@ BEGIN
     END IF;
 END //
 
-CREATE FUNCTION fn_GetAnyCircuitRegistryByName (p_circuit_name VARCHAR(50))
+CREATE FUNCTION IF NOT EXISTS fn_GetAnyCircuitRegistryByName (p_circuit_name VARCHAR(50))
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE p_select_result INT DEFAULT 0;
@@ -157,7 +157,7 @@ BEGIN
     RETURN p_select_result;
 END //
 
-CREATE FUNCTION fn_GetAnyCircuitRegistryById (p_circuit_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_GetAnyCircuitRegistryById (p_circuit_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE p_select_result INT DEFAULT 0;
@@ -169,7 +169,7 @@ BEGIN
     RETURN p_select_result;
 END //
 
-CREATE FUNCTION fn_CheckNullEmptyArray (arr JSON)
+CREATE FUNCTION IF NOT EXISTS fn_CheckNullEmptyArray (arr JSON)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
 
@@ -193,7 +193,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION fn_CheckPenaltyTypeCorrect (p_penalty_type VARCHAR(20))
+CREATE FUNCTION IF NOT EXISTS fn_CheckPenaltyTypeCorrect (p_penalty_type VARCHAR(20))
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     IF p_penalty_type = 'POINTS' THEN RETURN 1; END IF;
@@ -204,7 +204,7 @@ BEGIN
     RETURN 0;
 END //
 
-CREATE FUNCTION fn_IdRegisterExistsFromVehicles (p_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisterExistsFromVehicles (p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -217,7 +217,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_IdRegisterExistsFromTeams(p_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisterExistsFromTeams(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -230,7 +230,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_IdRegisteredFromRaces(p_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisteredFromRaces(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -242,7 +242,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_IdRegisteredFromResults(p_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisteredFromResults(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -254,7 +254,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_IdRegisteredFromPenalties(p_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisteredFromPenalties(p_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -266,7 +266,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_IdRegisteredFromInscriptions(p_id_vehicle INT, p_id_race INT, p_id_team INT)
+CREATE FUNCTION IF NOT EXISTS fn_IdRegisteredFromInscriptions(p_id_vehicle INT, p_id_race INT, p_id_team INT)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     DECLARE v_select_result TINYINT(1) DEFAULT 0;
@@ -278,7 +278,7 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
+CREATE FUNCTION IF NOT EXISTS fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 READS SQL DATA
 BEGIN
@@ -326,7 +326,7 @@ BEGIN
 
 END //
 
-CREATE FUNCTION fn_CheckInscriptionData(p_vehicles_quantity TINYINT, p_registration_date TIMESTAMP)
+CREATE FUNCTION IF NOT EXISTS fn_CheckInscriptionData(p_vehicles_quantity TINYINT, p_registration_date TIMESTAMP)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
     IF NOT p_vehicles_quantity = 2 THEN
@@ -340,7 +340,7 @@ BEGIN
     RETURN 1;
 END //
 
-CREATE FUNCTION fn_UserHasRole(p_user_id INT, p_role_name VARCHAR(100))
+CREATE FUNCTION IF NOT EXISTS fn_UserHasRole(p_user_id INT, p_role_name VARCHAR(100))
 RETURNS TINYINT(1)
 DETERMINISTIC
 READS SQL DATA

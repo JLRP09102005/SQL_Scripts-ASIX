@@ -8,7 +8,7 @@ DELIMITER //
 -- ============================================================
 
 -- 1. Clasificación de una carrera (público)
-CREATE PROCEDURE sp_public_race_leaderboard (
+CREATE PROCEDURE IF NOT EXISTS sp_public_race_leaderboard (
     IN p_race_id INT
 )
 DETERMINISTIC
@@ -50,7 +50,7 @@ BEGIN
 END //
 
 -- 2. Calendario de carreras (público)
-CREATE PROCEDURE sp_public_race_calendar ()
+CREATE PROCEDURE IF NOT EXISTS sp_public_race_calendar ()
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -69,7 +69,7 @@ BEGIN
 END //
 
 -- 3. Listado de pilotos (público, solo nombre y categoría)
-CREATE PROCEDURE sp_public_pilots_list ()
+CREATE PROCEDURE IF NOT EXISTS sp_public_pilots_list ()
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -84,7 +84,7 @@ BEGIN
 END //
 
 -- 4. Resultados por equipo (público)
-CREATE PROCEDURE sp_public_team_results (
+CREATE PROCEDURE IF NOT EXISTS sp_public_team_results (
     IN p_team_id INT
 )
 DETERMINISTIC
