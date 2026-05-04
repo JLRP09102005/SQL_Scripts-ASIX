@@ -32,7 +32,7 @@ SOURCE triggers/trigger_valid_inscription.sql;
 
 -- Roles
 SOURCE roles/create-roles.sql;
-SOURCE roles/grant-privileges;
+SOURCE roles/grant-privileges.sql;
 
 -- Users
 SOURCE users/create-users.sql;
