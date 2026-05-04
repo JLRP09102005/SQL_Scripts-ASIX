@@ -278,7 +278,8 @@ BEGIN
     RETURN v_select_result;
 END //
 
-CREATE FUNCTION IF NOT EXISTS fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
+-- PENDING TO CHANGE IT TO PROCEDURE METHOD
+/* CREATE FUNCTION IF NOT EXISTS fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
 RETURNS TINYINT(1) DETERMINISTIC
 READS SQL DATA
 BEGIN
@@ -324,7 +325,7 @@ BEGIN
     
     RETURN 0;
 
-END //
+END // */
 
 CREATE FUNCTION IF NOT EXISTS fn_CheckInscriptionData(p_vehicles_quantity TINYINT, p_registration_date TIMESTAMP)
 RETURNS TINYINT(1) DETERMINISTIC
