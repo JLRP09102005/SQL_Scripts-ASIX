@@ -4,11 +4,11 @@
 mysql -u usuario -p < main.sql */
 ---------------------------------
 
-CREATE DATABASE IF NOT EXISTS wec;
-USE wec;
-
 -- Drop last schema
 SOURCE cleanup/drop.all.sql;
+
+CREATE DATABASE IF NOT EXISTS wec;
+USE wec;
 
 --Basic DB structure
 SOURCE schema/tables.sql;
