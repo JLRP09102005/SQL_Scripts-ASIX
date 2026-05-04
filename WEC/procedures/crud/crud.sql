@@ -6,7 +6,7 @@ DELIMITER //
 -- CIRCUITS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertCircuitData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertCircuitData (
     IN p_circuit_name VARCHAR(100),
     IN p_country VARCHAR(50),
     IN p_length_km DECIMAL(3,2),
@@ -64,7 +64,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateCircuitData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateCircuitData (
     IN p_circuit_id INT,
     IN p_circuit_name VARCHAR(100),
     IN p_country VARCHAR(50),
@@ -133,7 +133,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteCircuitData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteCircuitData (
     IN p_circuit_id INT,
     OUT p_spstate TINYINT
 )
@@ -186,7 +186,7 @@ END //
 -- MANUFACTURERS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertManufacturerData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertManufacturerData (
     IN p_manufacturer_name VARCHAR(100),
     IN p_manufacturer_country VARCHAR(50),
     OUT p_spstate TINYINT
@@ -233,7 +233,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateManufacturerData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateManufacturerData (
     IN p_id_manufacturer INT,
     IN p_manufacturer_name VARCHAR(100),
     IN p_manufacturer_country VARCHAR(50),
@@ -289,7 +289,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteManufacturerData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteManufacturerData (
     IN p_id_manufacturer INT,
     OUT p_spstate TINYINT
 )
@@ -343,7 +343,7 @@ END //
 -- PILOT CATEGORIES
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertPilotCategoriesData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertPilotCategoriesData (
     IN p_pilot_category_name VARCHAR(50),
     IN p_pilot_category_description VARCHAR(100),
     IN p_min_age TINYINT,
@@ -396,7 +396,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdatePilotCategoriesData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdatePilotCategoriesData (
     IN p_id_pilot_category INT,
     IN p_pilot_category_name VARCHAR(50),
     IN p_pilot_category_description VARCHAR(100),
@@ -459,7 +459,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeletePilotCategoriesData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeletePilotCategoriesData (
     IN p_id_pilot_category INT,
     OUT p_spstate TINYINT
 )
@@ -513,7 +513,7 @@ END //
 -- PILOTS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertPilotData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertPilotData (
     IN p_pilot_name VARCHAR(100),
     IN p_pilot_age TINYINT,
     IN p_id_pilot_category INT,
@@ -573,7 +573,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdatePilotData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdatePilotData (
     IN p_id_pilot INT,
     IN p_pilot_name VARCHAR(100),
     IN p_pilot_age TINYINT,
@@ -643,7 +643,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeletePilotData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeletePilotData (
     IN p_id_pilot INT,
     OUT p_spstate TINYINT
 )
@@ -697,7 +697,7 @@ END //
 -- TEAMS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertTeamData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertTeamData (
     IN p_team_name VARCHAR(100),
     IN p_mechanic_num TINYINT,
     IN p_id_manufacturer INT,
@@ -756,7 +756,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateTeamData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateTeamData (
     IN p_id_team INT,
     IN p_team_name VARCHAR(100),
     IN p_mechanic_num TINYINT,
@@ -824,7 +824,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteTeamData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteTeamData (
     IN p_id_team INT,
     OUT p_spstate TINYINT
 )
@@ -877,7 +877,7 @@ END //
 -- VEHICLES
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertVehicleData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertVehicleData (
     IN p_model VARCHAR(100),
     IN p_specifications_url VARCHAR(1024),
     OUT p_spstate TINYINT
@@ -929,7 +929,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateVehicleData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateVehicleData (
     IN p_id_vehicle INT,
     IN p_model VARCHAR(100),
     IN p_specifications_url VARCHAR(1024),
@@ -989,7 +989,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteVehicleData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteVehicleData (
     IN p_id_vehicle INT,
     OUT p_spstate TINYINT
 )
@@ -1042,7 +1042,7 @@ END //
 -- RACES
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertRaceData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertRaceData (
     IN p_event_name VARCHAR(100),
     IN p_event_date DATETIME,
     IN p_event_duration TIME,
@@ -1100,7 +1100,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateRaceData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateRaceData (
     IN p_id_race INT,
     IN p_event_name VARCHAR(100),
     IN p_event_date DATETIME,
@@ -1168,7 +1168,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteRaceData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteRaceData (
     IN p_id_race INT,
     OUT p_spstate TINYINT
 )
@@ -1221,7 +1221,7 @@ END //
 -- INSCRIPTIONS (Composite PK)
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertInscriptionData (
     IN p_id_vehicle INT,
     IN p_id_race INT,
     IN p_id_team INT,
@@ -1290,7 +1290,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateInscriptionData (
     IN p_id_vehicle_old INT,
     IN p_id_race_old INT,
     IN p_id_team_old INT,
@@ -1376,7 +1376,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteInscriptionData (
     IN p_id_vehicle INT,
     IN p_id_race INT,
     IN p_id_team INT,
@@ -1432,7 +1432,7 @@ END //
 -- PILOTS INSCRIPTIONS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertPilotInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertPilotInscriptionData (
     IN p_id_pilot INT,
     IN p_id_vehicle INT,
     IN p_id_race INT,
@@ -1492,7 +1492,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdatePilotInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdatePilotInscriptionData (
     IN p_old_id_pilot INT,
     IN p_id_vehicle INT,
     IN p_id_race INT,
@@ -1558,7 +1558,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeletePilotInscriptionData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeletePilotInscriptionData (
     IN p_id_pilot INT,
     IN p_id_vehicle INT,
     IN p_id_race INT,
@@ -1614,7 +1614,7 @@ END //
 -- RESULTS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertResultData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertResultData (
     IN p_position INT,
     IN p_final_time TIME,
     IN p_penalty_time TIME,
@@ -1683,7 +1683,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateResultData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateResultData (
     IN p_id_result INT,
     IN p_position INT,
     IN p_final_time TIME,
@@ -1768,7 +1768,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteResultData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteResultData (
     IN p_id_result INT,
     OUT p_spstate TINYINT
 )
@@ -1816,7 +1816,7 @@ END //
 -- PENALTIES
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertPenaltyData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertPenaltyData (
     IN p_penalty_type CHAR(30),
     IN p_reason VARCHAR(100),
     IN p_penalty_value DECIMAL(7,2),
@@ -1875,7 +1875,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdatePenaltyData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdatePenaltyData (
     IN p_id_penalty INT,
     IN p_penalty_type CHAR(30),
     IN p_reason VARCHAR(100),
@@ -1943,7 +1943,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeletePenaltyData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeletePenaltyData (
     IN p_id_penalty INT,
     OUT p_spstate TINYINT
 )
@@ -1996,7 +1996,7 @@ END //
 -- USER_ROLES
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertUserRoleData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertUserRoleData (
     IN p_role_name VARCHAR(100),
     OUT p_spstate TINYINT
 )
@@ -2041,7 +2041,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateUserRoleData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateUserRoleData (
     IN p_id_user_role INT,
     IN p_role_name VARCHAR(100),
     OUT p_spstate TINYINT
@@ -2093,7 +2093,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteUserRoleData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteUserRoleData (
     IN p_id_user_role INT,
     OUT p_spstate TINYINT
 )
@@ -2147,7 +2147,7 @@ END //
 -- USERS
 -- =================================================================
 
-CREATE PROCEDURE sp_InsertUserData (
+CREATE PROCEDURE IF NOT EXISTS sp_InsertUserData (
     IN p_username VARCHAR(50),
     IN p_email VARCHAR(100),
     IN p_password_hash VARCHAR(255),
@@ -2207,7 +2207,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_UpdateUserData (
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateUserData (
     IN p_id_user INT,
     IN p_username VARCHAR(50),
     IN p_email VARCHAR(100),
@@ -2278,7 +2278,7 @@ BEGIN
     SET p_spstate = 1;
 END //
 
-CREATE PROCEDURE sp_DeleteUserData (
+CREATE PROCEDURE IF NOT EXISTS sp_DeleteUserData (
     IN p_id_user INT,
     OUT p_spstate TINYINT
 )
