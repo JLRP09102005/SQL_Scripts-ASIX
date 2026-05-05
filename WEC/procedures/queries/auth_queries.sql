@@ -13,7 +13,7 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        IF NOT v_error_handler = '' THEN
+        IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45049' SET MESSAGE_TEXT = v_error_message;
         ELSE
             RESIGNAL;
@@ -38,8 +38,9 @@ BEGIN
         use.team_id,
         ur.role_name AS role
     FROM users use
-    LEFT JOIN user_userrole uu ON uu.id_user = use.id_user,
-    LEFT JOIN user_roles ur ON ur.id_user_roles = uu.id_user_role;
+    LEFT JOIN user_userrole uu ON uu.id_user = use.id_user
+    LEFT JOIN user_roles ur ON ur.id_user_roles = uu.id_user_role
+    WHERE use.email = p_email;
 
 END //
 
