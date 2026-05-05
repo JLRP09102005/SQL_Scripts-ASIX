@@ -2,7 +2,7 @@ USE wec;
 
 DELIMITER //
 
-CREATE PROCEDURE IF NOT EXISTS sp_auth_login (IN p_email VARCHAR(100), IN p_password_hash VARCHAR(255))
+CREATE PROCEDURE IF NOT EXISTS sp_auth_login (IN p_email VARCHAR(100))
 DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -20,7 +20,7 @@ BEGIN
         END IF;
     END;
 
-    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_email, p_password_hash)) THEN
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_email)) THEN
         SET v_error_message = "Error validating sp_auth_login, there are empty or null parameters";
         SIGNAL SQLSTATE '45049';
     END IF;

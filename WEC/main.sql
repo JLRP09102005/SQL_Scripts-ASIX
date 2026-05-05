@@ -21,6 +21,7 @@ SOURCE functions/functions.sql;
 
 -- Procedures
 SOURCE procedures/crud/crud.sql;
+SOURCE procedures/queries/auth_queries.sql;
 SOURCE procedures/queries/authenticated_queries.sql;
 SOURCE procedures/queries/public_queries.sql;
 SOURCE procedures/business/business.sql;
