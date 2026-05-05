@@ -64,3 +64,5 @@
 -45038 -> Error processing penalty result
 
 -45042 -> Error updatting leader points
+
+-45049 -> Error authenticating user credentials

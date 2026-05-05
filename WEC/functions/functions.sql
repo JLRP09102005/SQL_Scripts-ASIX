@@ -354,4 +354,15 @@ BEGIN
     RETURN IF(v_count > 0, 1, 0);
 END //
 
+CREATE FUNTION IF NOT EXISTS fn_CheckEmailCorrectFormat(p_email VARCHAR(100))
+RETURNS TINYINT(1)
+NOT DETERMINISTIC
+BEGIN
+    IF p_email NOT LIKE '%@%.%' THEN
+        RETURN 0;
+    END IF;
+
+    RETURN 1;
+END //
+
 DELIMITER ;
