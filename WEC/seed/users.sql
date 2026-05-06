@@ -10,8 +10,7 @@ INSERT INTO users (username, email, password_hash, team_id) VALUES
 -- Administradores (sin equipo)
 ('admin',               'admin@wec.com',                     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', NULL),
 ('readonly_user',       'readonly@wec.com',                  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', NULL),
--- Team managers (team_id referencia 04_teams.sql)
-('toyota_manager',      'manager@toyota-gr.com',             '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 1),
+('toyota_manager',      'manager@toyota-gr.com',             '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 1),-- Team managers (team_id referencia 04_teams.sql)
 ('ferrari_manager',     'manager@ferrari-afcorse.com',       '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 2),
 ('porsche_manager',     'manager@porsche-penske.com',        '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 3),
 ('peugeot_manager',     'manager@peugeot-sport.com',         '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 4),
