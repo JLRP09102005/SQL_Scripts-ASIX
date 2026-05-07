@@ -14,8 +14,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45034' SET MESSAGE_TEXT = v_error_message;
         ELSE
@@ -49,13 +47,11 @@ BEGIN
         SIGNAL SQLSTATE '45034';
     END IF;
 
-    START TRANSACTION;
-
     IF (p_penalty_type = 'POINTS') THEN
         UPDATE results res
         SET 
-            res.penalty_points_team = GREATEST(0, res.penalty_points_team - FLOOR(p_penalty_value)),
-            res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(p_penalty_value))
+            res.penalty_points_team = GREATEST(0, CAST(res.penalty_points_team AS SIGNED) - CAST(FLOOR(p_penalty_value) AS SIGNED)),
+            res.penalty_points_pilot = GREATEST(0, CAST(res.penalty_points_pilot AS SIGNED) - CAST(FLOOR(p_penalty_value) AS SIGNED))
         WHERE res.id_vehicle = p_vehicle_id
             AND res.id_team = p_team_id
             AND res.id_race = p_race_id;
@@ -92,6 +88,23 @@ BEGIN
         SIGNAL SQLSTATE '45034';
     END IF;
 
+END //
+
+CREATE PROCEDURE IF NOT EXISTS sp_AddTeamPenaltyTx ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_vehicle_id INT, IN p_team_id INT, IN p_race_id INT )
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Applies a penalty (POINTS, TIME, DNF) to a team result. Updates the result record for the given vehicle, team and race. Called by sp_ProcessResultPenalty.'
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    CALL sp_AddTeamPenalty(p_penalty_type, p_penalty_value, p_vehicle_id, p_team_id, p_race_id);
     COMMIT;
 
 END //
@@ -108,8 +121,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45035' SET MESSAGE_TEXT = v_error_message;
         ELSE
@@ -132,11 +143,9 @@ BEGIN
         SET v_error_message = 'Error validating sp_AddPilotPenalty parameters, p_result_id is not registered at results table';
     END IF;
 
-    START TRANSACTION;
-
     IF (p_penalty_type = 'POINTS') THEN
         UPDATE results res
-        SET res.penalty_points_pilot = GREATEST(0, res.penalty_points_pilot - FLOOR(p_penalty_value))
+        SET res.penalty_points_pilot = GREATEST(0, CAST(res.penalty_points_pilot AS SIGNED) - CAST(FLOOR(p_penalty_value) AS SIGNED))
         WHERE res.id_result = p_result_id;
 
         SET v_affected_rows = ROW_COUNT();
@@ -166,6 +175,23 @@ BEGIN
         SIGNAL SQLSTATE '45035';
     END IF;
 
+END //
+
+CREATE PROCEDURE IF NOT EXISTS sp_AddPilotPenaltyTx ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_result_id INT )
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Applies a penalty (POINTS, TIME, DSQ, DNF) to a pilot result. Updates the result record for the given result id. Called by sp_ProcessResultPenalty.'
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    CALL sp_AddPilotPenalty(p_penalty_type, p_penalty_value, p_result_id);
     COMMIT;
 
 END //
@@ -181,8 +207,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45036' SET MESSAGE_TEXT = v_error_message;
         ELSE
@@ -225,8 +249,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45037' SET MESSAGE_TEXT = v_error_message;
         ELSE

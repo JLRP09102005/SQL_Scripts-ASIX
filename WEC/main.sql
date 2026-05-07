@@ -40,10 +40,9 @@ SOURCE users/create-users.sql;
 SOURCE users/grant-user-privileges.sql;
 
 -- Data example
-SOURCE seed/circuits,sql;
+SOURCE seed/circuits.sql;
 SOURCE seed/inscriptions.sql;
 SOURCE seed/manufacturers.sql;
-SOURCE seed/penalties.sql;
 SOURCE seed/pilot_categories.sql;
 SOURCE seed/pilots_inscriptions.sql;
 SOURCE seed/pilots.sql;
@@ -53,3 +52,4 @@ SOURCE seed/teams.sql;
 SOURCE seed/user_roles.sql;
 SOURCE seed/users.sql;
 SOURCE seed/vehicles.sql;
+SOURCE seed/penalties.sql;
