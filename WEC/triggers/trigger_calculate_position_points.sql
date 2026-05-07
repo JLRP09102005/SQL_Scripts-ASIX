@@ -1,4 +1,4 @@
--- Active: 1763026326945@@127.0.0.1@3306@wec
+/* -- Active: 1763026326945@@127.0.0.1@3306@wec
 USE wec;
 DELIMITER //
 
@@ -7,4 +7,4 @@ FOR EACH ROW
 BEGIN
     CALL sp_UpdateLeaderPoints(NEW.id_race);
 END//
-DELIMITER ;
+DELIMITER ; */
