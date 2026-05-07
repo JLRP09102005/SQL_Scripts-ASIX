@@ -321,8 +321,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45039' SET MESSAGE_TEXT = v_error_message;
         ELSE
@@ -346,12 +344,11 @@ BEGIN
         SIGNAL SQLSTATE '45039';
     END IF;
 
-    IF CheckNegativeValues(p_result_points) THEN
+    IF fn_CheckNegativeValues(p_result_points) THEN
         SET v_error_message = 'Error validating sp_AddResultsPoints parameters, p_result_points should not be a negative value';
         SIGNAL SQLSTATE '45039';
     END IF;
 
-    START TRANSACTION;
     UPDATE results res SET
         res.base_points_team = p_result_points,
         res.base_points_pilot = p_result_points
@@ -366,6 +363,27 @@ BEGIN
         SIGNAL SQLSTATE '45001';
     END IF;
 
+END //
+
+CREATE PROCEDURE IF NOT EXISTS sp_AddResultPointsTx(
+    IN p_race_id INT,
+    IN p_result_id INT,
+    IN p_result_points TINYINT
+)
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Transactional wrapper for sp_AddResultPoints. Use this when calling from application code directly.'
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    CALL sp_AddResultPoints(p_race_id, p_result_id, p_result_points);
     COMMIT;
 
 END //
@@ -378,6 +396,7 @@ COMMENT 'Iterates over the top 10 results of a race and assigns leaderboard poin
 BEGIN
 
     DECLARE v_done TINYINT(1) DEFAULT 0;
+    DECLARE v_cursor_open TINYINT(1) DEFAULT 0;
     DECLARE v_cur_id_result INT DEFAULT 0;
     DECLARE v_position TINYINT DEFAULT 1;
     DECLARE v_position_points TINYINT DEFAULT 25;
@@ -395,8 +414,9 @@ BEGIN
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        CLOSE cur_times;
-        ROLLBACK;
+        IF v_cursor_open THEN
+            CLOSE cur_times;
+        END IF;
 
         IF NOT v_error_message = '' THEN
             SIGNAL SQLSTATE '45042' SET MESSAGE_TEXT = v_error_message;
@@ -411,14 +431,13 @@ BEGIN
         SIGNAL SQLSTATE '45042';
     END IF;
 
-    START TRANSACTION;
-
-    SELECT GetPositionsPointsMultiplier(p_new_id_race) INTO v_position_points_mult;
+    SELECT fn_GetPositionsPointsMultiplier(p_new_id_race) INTO v_position_points_mult;
     
     OPEN cur_times;
+    SET v_cursor_open = 1;
     WHILE (v_done != 1 AND v_position <= 10) DO
         FETCH cur_times INTO v_cur_id_result;
-        SELECT GetLeaderboardPointsCalc(v_position, v_position_points, v_position_points_mult) INTO v_points_calc_result;
+        SELECT fn_GetLeaderboardPointsCalc(v_position, v_position_points, v_position_points_mult) INTO v_points_calc_result;
 
         IF(v_done != 1) THEN
             CALL sp_AddResultPoints(p_new_id_race, v_cur_id_result, v_points_calc_result);
@@ -428,6 +447,23 @@ BEGIN
     END WHILE;
     CLOSE cur_times;
 
+END //
+
+CREATE PROCEDURE IF NOT EXISTS sp_UpdateLeaderPointsTx(IN p_new_id_race INT)
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Transactional wrapper for sp_UpdateLeaderPoints. Use this when calling from application code directly.'
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    CALL sp_UpdateLeaderPoints(p_new_id_race);
     COMMIT;
 
 END //

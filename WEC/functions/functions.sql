@@ -28,7 +28,7 @@ COMMENT 'Check if a value is under his max limit'
 DETERMINISTIC
 NO SQL
 BEGIN
-    RETURN (numToCheck < maxNumber);
+    RETURN (numToCheck <= maxNumber);
 END //
 
 CREATE FUNCTION IF NOT EXISTS fn_GetTeamMechanicsNumber ( search_team_id INT )
