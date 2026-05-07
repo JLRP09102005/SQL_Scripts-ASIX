@@ -119,4 +119,14 @@ BEGIN
     ORDER BY rac.event_date;
 END //
 
+CREATE PROCEDURE IF NOT EXISTS sp_public_teams_list()
+DETERMINISTIC
+READS SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+    SELECT t.team_name
+    FROM teams t
+    ORDER BY t.team_name;
+END //
+
 DELIMITER ;
