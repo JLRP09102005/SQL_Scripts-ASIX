@@ -3,7 +3,7 @@ USE wec;
 DELIMITER //
 
 CREATE PROCEDURE IF NOT EXISTS sp_auth_login (IN p_email VARCHAR(100))
-DETERMINISTIC
+NOT DETERMINISTIC
 READS SQL DATA
 SQL SECURITY INVOKER
 COMMENT 'Validates user credentials and returns user data with role'
@@ -31,16 +31,16 @@ BEGIN
     END IF;
 
     SELECT
-        use.id_user,
-        use.username,
-        use.email,
-        use.password_hash,
-        use.team_id,
+        us.id_user,
+        us.username,
+        us.email,
+        us.password_hash,
+        us.team_id,
         ur.role_name AS role
-    FROM users use
-    LEFT JOIN user_userrole uu ON uu.id_user = use.id_user
+    FROM users us
+    LEFT JOIN user_userrole uu ON uu.id_user = us.id_user
     LEFT JOIN user_roles ur ON ur.id_user_roles = uu.id_user_role
-    WHERE use.email = p_email;
+    WHERE us.email = p_email;
 
 END //
 

@@ -8,18 +8,18 @@ USE wec;
 
 INSERT INTO users (username, email, password_hash, team_id) VALUES
 -- Administradores (sin equipo)
-('admin',               'admin@wec.com',                     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', NULL),
-('readonly_user',       'readonly@wec.com',                  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', NULL),
-('toyota_manager',      'manager@toyota-gr.com',             '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 1),-- Team managers (team_id referencia 04_teams.sql)
-('ferrari_manager',     'manager@ferrari-afcorse.com',       '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 2),
-('porsche_manager',     'manager@porsche-penske.com',        '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 3),
-('peugeot_manager',     'manager@peugeot-sport.com',         '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 4),
-('bmw_manager',         'manager@bmw-wrt.com',               '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 5),
-('cadillac_manager',    'manager@cadillac-racing.com',       '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 6),
-('lamborghini_manager', 'manager@lamborghini-ironlynx.com',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 7),
-('alpine_manager',      'manager@alpine-endurance.com',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 8),
-('united_manager',      'manager@united-autosports.com',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 9),
-('proton_manager',      'manager@proton-competition.com',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oE8Z1kGFq', 10);
+('admin',               'admin@wec.com',                     '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', NULL),
+('readonly_user',       'readonly@wec.com',                  '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', NULL),
+('toyota_manager',      'manager@toyota-gr.com',             '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 1),-- Team managers (team_id referencia 04_teams.sql)
+('ferrari_manager',     'manager@ferrari-afcorse.com',       '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 2),
+('porsche_manager',     'manager@porsche-penske.com',        '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 3),
+('peugeot_manager',     'manager@peugeot-sport.com',         '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 4),
+('bmw_manager',         'manager@bmw-wrt.com',               '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 5),
+('cadillac_manager',    'manager@cadillac-racing.com',       '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 6),
+('lamborghini_manager', 'manager@lamborghini-ironlynx.com',  '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 7),
+('alpine_manager',      'manager@alpine-endurance.com',      '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 8),
+('united_manager',      'manager@united-autosports.com',     '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 9),
+('proton_manager',      'manager@proton-competition.com',    '$2y$12$KzKMo6fn7ZSdxkut4cqoXeajnor6cm8fxDl/pHFkgnD5mi/9OZ1Ai', 10);
 
 -- ============================================================
 -- Asignación de roles (user_userrole)
