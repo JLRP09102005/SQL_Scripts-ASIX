@@ -26,15 +26,15 @@ INSERT INTO users (username, email, password_hash, team_id) VALUES
 -- id_user_role: 1=admin, 2=team_manager, 3=readonly
 -- ============================================================
 INSERT INTO user_userrole (id_user, id_user_role) VALUES
-(1,  1),   -- admin               → admin
-(2,  3),   -- readonly_user       → readonly
-(3,  2),   -- toyota_manager      → team_manager
-(4,  2),   -- ferrari_manager     → team_manager
-(5,  2),   -- porsche_manager     → team_manager
-(6,  2),   -- peugeot_manager     → team_manager
-(7,  2),   -- bmw_manager         → team_manager
-(8,  2),   -- cadillac_manager    → team_manager
-(9,  2),   -- lamborghini_manager → team_manager
-(10, 2),   -- alpine_manager      → team_manager
-(11, 2),   -- united_manager      → team_manager
-(12, 2);   -- proton_manager      → team_manager
+(1,  1),   -- admin               
+(2,  10),   -- readonly_user       
+(3,  2),   -- toyota_manager      
+(4,  2),   -- ferrari_manager     
+(5,  2),   -- porsche_manager     
+(6,  2),   -- peugeot_manager     
+(7,  2),   -- bmw_manager         
+(8,  2),   -- cadillac_manager    
+(9,  2),   -- lamborghini_manager 
+(10, 2),   -- alpine_manager     
+(11, 2),   -- united_manager     
+(12, 2);   -- proton_manager      
