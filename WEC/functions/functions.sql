@@ -1,5 +1,5 @@
 -- Active: 1763026326945@@127.0.0.1@3306@wec
-USE WEC;
+USE wec;
 DELIMITER //
 
 CREATE FUNCTION IF NOT EXISTS fn_CheckAfectedRowsCount ( row_count INT )

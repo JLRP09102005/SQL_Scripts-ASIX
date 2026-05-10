@@ -68,7 +68,7 @@ CREATE PROCEDURE IF NOT EXISTS sp_UpdateCircuitData (
     IN p_circuit_id INT,
     IN p_circuit_name VARCHAR(100),
     IN p_country VARCHAR(50),
-    IN p_length_km DECIMAL(3,2),
+    IN p_length_km DECIMAL(5,2),
     IN p_direction CHAR(20),
     OUT p_spstate TINYINT
 )

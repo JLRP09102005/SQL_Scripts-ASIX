@@ -267,9 +267,15 @@ BEGIN
         SIGNAL SQLSTATE '45099' SET MESSAGE_TEXT = 'Insufficient privileges: admin role required';
     END IF;
 
-    SELECT r.*, rac.event_name
+    SELECT 
+        r.*, 
+        rac.event_name,
+        tea.team_name,
+        veh.model
     FROM results r
-    JOIN races rac ON rac.id_race = r.id_race
+    INNER JOIN races rac ON rac.id_race = r.id_race
+    INNER JOIN teams tea ON tea.id_team = r.id_team
+    INNER JOIN vehicles veh ON veh.id_vehicle = r.id_vehicle 
     ORDER BY rac.event_date, r.position;
 END //
 
@@ -297,7 +303,27 @@ BEGIN
         SIGNAL SQLSTATE '45099' SET MESSAGE_TEXT = 'Insufficient privileges: admin role required';
     END IF;
 
-    SELECT * FROM penalties ORDER BY created_at DESC;
+    SELECT
+        pen.*,
+        tea.team_name,
+        IF(pen.penalty_applies_to = 'PILOT', pil.pilot_name, NULL) AS pilot_name,
+        rac.event_name
+    FROM penalties pen
+    LEFT JOIN penalties_results penres
+        ON penres.id_penalty = pen.id_penalty
+    LEFT JOIN results res
+        ON res.id_result = penres.id_result
+    LEFT JOIN races rac
+        ON rac.id_race = res.id_race
+    LEFT JOIN teams tea
+        ON tea.id_team = res.id_team
+    LEFT JOIN pilots_inscriptions pilins
+        ON pilins.id_race = res.id_race
+    AND pilins.id_team = res.id_team
+    AND pilins.id_vehicle = res.id_vehicle
+    LEFT JOIN pilots pil
+        ON pil.id_pilot = pilins.id_pilot
+    ORDER BY pen.created_at DESC;
 END //
 
 -- 1.11 Ver todas las relaciones penalización-resultado (admin)

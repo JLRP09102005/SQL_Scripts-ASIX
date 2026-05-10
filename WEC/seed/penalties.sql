@@ -1,3 +1,4 @@
+-- Active: 1763026326945@@127.0.0.1@3306@wec
 -- ============================================================
 -- FILE: penalties.sql
 -- DESC: Penalizaciones y su relación con resultados
