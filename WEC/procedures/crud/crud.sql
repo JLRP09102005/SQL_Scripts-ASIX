@@ -144,6 +144,7 @@ COMMENT 'Deletes a circuit record after checking dependencies.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -166,7 +167,8 @@ BEGIN
         SIGNAL SQLSTATE '45013';
     END IF;
 
-    IF fn_CheckForExtraDependences('circuits', p_circuit_id) THEN
+    CALL sp_CheckForExtraDependences('circuits', p_circuit_id, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete circuit because it has dependent records';
         SIGNAL SQLSTATE '45013';
     END IF;
@@ -300,6 +302,7 @@ COMMENT 'Deletes a manufacturer if not referenced by any team.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -323,7 +326,8 @@ BEGIN
         SIGNAL SQLSTATE '45017';
     END IF;
 
-    IF fn_CheckForExtraDependences('manufacturers', p_id_manufacturer) THEN
+    CALL sp_CheckForExtraDependences('manufacturers', p_id_manufacturer, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete manufacturer because it has dependent records';
         SIGNAL SQLSTATE '45017';
     END IF;
@@ -470,6 +474,7 @@ COMMENT 'Deletes a pilot category if no pilot uses it.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -493,7 +498,8 @@ BEGIN
         SIGNAL SQLSTATE '45021';
     END IF;
 
-    IF fn_CheckForExtraDependences('pilot_categories', p_id_pilot_category) THEN
+    CALL sp_CheckForExtraDependences('pilot_categories', p_id_pilot_category, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete category because it has dependent records';
         SIGNAL SQLSTATE '45021';
     END IF;
@@ -654,6 +660,7 @@ COMMENT 'Deletes a pilot if not referenced in inscriptions or penalties.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -677,7 +684,8 @@ BEGIN
         SIGNAL SQLSTATE '45023';
     END IF;
 
-    IF fn_CheckForExtraDependences('pilots', p_id_pilot) THEN
+    CALL sp_CheckForExtraDependences('pilots', p_id_pilot, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete pilot because it has dependent records';
         SIGNAL SQLSTATE '45023';
     END IF;
@@ -835,6 +843,7 @@ COMMENT 'Deletes a team if not referenced in inscriptions, results, or users.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -857,7 +866,8 @@ BEGIN
         SIGNAL SQLSTATE '45031';
     END IF;
 
-    IF fn_CheckForExtraDependences('teams', p_id_team) THEN
+    CALL sp_CheckForExtraDependences('teams', p_id_team, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete team because it has dependent records';
         SIGNAL SQLSTATE '45031';
     END IF;
@@ -1000,6 +1010,7 @@ COMMENT 'Deletes a vehicle if not referenced in inscriptions or results.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1022,7 +1033,8 @@ BEGIN
         SIGNAL SQLSTATE '45033';
     END IF;
 
-    IF fn_CheckForExtraDependences('vehicles', p_id_vehicle) THEN
+    CALL sp_CheckForExtraDependences('vehicles', p_id_vehicle, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete vehicle because it has dependent records';
         SIGNAL SQLSTATE '45033';
     END IF;
@@ -1179,6 +1191,7 @@ COMMENT 'Deletes a race if no inscriptions or results exist.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1201,7 +1214,8 @@ BEGIN
         SIGNAL SQLSTATE '45027';
     END IF;
 
-    IF fn_CheckForExtraDependences('races', p_id_race) THEN
+    CALL sp_CheckForExtraDependences('races', p_id_race, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete race because it has dependent records';
         SIGNAL SQLSTATE '45027';
     END IF;
@@ -1389,6 +1403,7 @@ COMMENT 'Deletes an inscription if no dependent records exist.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1411,7 +1426,8 @@ BEGIN
         SIGNAL SQLSTATE '45015';
     END IF;
 
-    IF fn_CheckForExtraDependences('inscriptions', p_id_vehicle) THEN
+    CALL sp_CheckForExtraDependences('inscriptions', p_id_vehicle, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete inscription because it has dependent records';
         SIGNAL SQLSTATE '45015';
     END IF;
@@ -1954,6 +1970,7 @@ COMMENT 'Deletes a penalty if not linked to any result.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1976,7 +1993,8 @@ BEGIN
         SIGNAL SQLSTATE '45019';
     END IF;
 
-    IF fn_CheckForExtraDependences('penalties', p_id_penalty) THEN
+    CALL sp_CheckForExtraDependences('penalties', p_id_penalty, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete penalty because it is applied to a result';
         SIGNAL SQLSTATE '45019';
     END IF;
@@ -2104,6 +2122,7 @@ COMMENT 'Deletes a user role if not assigned to any user.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_exists_dependences TINYINT(1) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -2127,7 +2146,8 @@ BEGIN
         SIGNAL SQLSTATE '45048';
     END IF;
 
-    IF fn_CheckForExtraDependences('user_roles', p_id_user_role) THEN
+    CALL sp_CheckForExtraDependences('user_roles', p_id_user_role, v_exists_dependences);
+    IF v_exists_dependences THEN
         SET v_error_message = 'Cannot delete role because it is assigned to one or more users';
         SIGNAL SQLSTATE '45048';
     END IF;
