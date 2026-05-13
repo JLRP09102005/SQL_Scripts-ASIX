@@ -2172,6 +2172,7 @@ CREATE PROCEDURE IF NOT EXISTS sp_InsertUserData (
     IN p_email VARCHAR(100),
     IN p_password_hash VARCHAR(255),
     IN p_team_id INT,
+    IN p_roles_csv VARCHAR(500),
     OUT p_spstate TINYINT
 )
 NOT DETERMINISTIC
@@ -2181,6 +2182,11 @@ COMMENT 'Inserts a new user.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_role_id INT DEFAULT NULL;
+    DECLARE v_new_user_id INT DEFAULT NULL;
+    DECLARE v_role_name VARCHAR(100) DEFAULT '';
+    DECLARE v_remaining VARCHAR(500) DEFAULT '';
+    DECLARE v_comma_pos INT DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -2193,7 +2199,7 @@ BEGIN
         END IF;
     END;
 
-    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_username, p_email, p_password_hash, p_team_id)) THEN
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_username, p_email, p_password_hash, p_team_id, p_roles_csv)) THEN
         SET v_error_message = 'Parameters cannot be null or empty';
         SIGNAL SQLSTATE '45043';
     END IF;
@@ -2216,6 +2222,7 @@ BEGIN
     END IF;
 
     START TRANSACTION;
+
     INSERT INTO users (username, email, password_hash, team_id)
     VALUES (p_username, p_email, p_password_hash, p_team_id);
     SET v_affected_rows = ROW_COUNT();
@@ -2223,6 +2230,39 @@ BEGIN
         SET v_error_message = 'Insert failed';
         SIGNAL SQLSTATE '45043';
     END IF;
+
+    SET v_new_user_id = fn_UserIdbyEmail(p_email);
+
+    SET v_remaining = TRIM(p_roles_csv);
+    WHILE LENGTH(v_remaining) > 0 DO
+
+        SET v_comma_pos = LOCATE(',', v_remaining);
+        IF v_comma_pos = 0 THEN
+            SET v_role_name = TRIM(v_remaining);
+            SET v_remaining = '';
+        ELSE
+            SET v_role_name = TRIM(LEFT(v_remaining, v_comma_pos - 1));
+            SET v_remaining = TRIM(SUBSTRING(v_remaining, v_comma_pos + 1));
+        END IF;
+
+        IF v_role_name != '' THEN
+            SET v_role_id = fn_ExistsRoleByName(v_role_name);
+            IF v_role_id IS NULL THEN
+                SET v_error_message = CONCAT('Role "', v_role_name, '" does not exists');
+                SIGNAL SQLSTATE '45043';
+            END IF;
+
+            INSERT INTO user_userrole (id_user, id_user_role) VALUES(v_new_user_id, v_role_id);
+            
+            SET v_affected_rows = v_affected_rows + ROW_COUNT();
+            IF v_affected_rows = 0 THEN
+                SET v_error_message = 'User insert failed';
+                SIGNAL SQLSTATE '45043';
+            END IF;
+        END IF;
+
+    END WHILE;
+
     COMMIT;
     SET p_spstate = 1;
 END //
@@ -2233,6 +2273,7 @@ CREATE PROCEDURE IF NOT EXISTS sp_UpdateUserData (
     IN p_email VARCHAR(100),
     IN p_password_hash VARCHAR(255),
     IN p_team_id INT,
+    IN p_roles_csv VARCHAR(500),
     OUT p_spstate TINYINT
 )
 NOT DETERMINISTIC
@@ -2242,6 +2283,10 @@ COMMENT 'Updates an existing user.'
 BEGIN
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
     DECLARE v_affected_rows INT DEFAULT 0;
+    DECLARE v_role_id INT DEFAULT NULL;
+    DECLARE v_role_name VARCHAR(100) DEFAULT '';
+    DECLARE v_remaining VARCHAR(500) DEFAULT '';
+    DECLARE v_comma_pos INT DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -2254,7 +2299,7 @@ BEGIN
         END IF;
     END;
 
-    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_user, p_username, p_email, p_password_hash, p_team_id)) THEN
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_id_user, p_username, p_email, p_password_hash, p_team_id, p_roles_csv)) THEN
         SET v_error_message = 'Parameters cannot be null or empty';
         SIGNAL SQLSTATE '45044';
     END IF;
@@ -2283,17 +2328,52 @@ BEGIN
     END IF;
 
     START TRANSACTION;
+
     UPDATE users
     SET username = p_username,
         email = p_email,
         password_hash = p_password_hash,
         team_id = p_team_id
     WHERE id_user = p_id_user;
+
     SET v_affected_rows = ROW_COUNT();
     IF v_affected_rows = 0 THEN
-        SET v_error_message = 'Update failed';
+        SET v_error_message = 'User update failed';
         SIGNAL SQLSTATE '45044';
     END IF;
+
+    DELETE FROM user_userrole WHERE id_user = p_id_user;
+
+    SET v_remaining = TRIM(p_roles_csv);
+    WHILE LENGTH(v_remaining) > 0 DO
+
+        SET v_comma_pos = LOCATE(',', v_remaining);
+        IF v_comma_pos = 0 THEN
+            SET v_role_name = TRIM(v_remaining);
+            SET v_remaining = '';
+        ELSE
+            SET v_role_name = TRIM(LEFT(v_remaining, v_comma_pos - 1));
+            SET v_remaining = TRIM(SUBSTRING(v_remaining, v_comma_pos + 1));
+        END IF;
+
+        IF v_role_name != '' THEN
+            SET v_role_id = fn_ExistsRoleByName(v_role_name);
+            IF v_role_id IS NULL THEN
+                SET v_error_message = CONCAT('Role "', v_role_name, '" does not exists');
+                SIGNAL SQLSTATE '45044';
+            END IF;
+
+            INSERT INTO user_userrole (id_user, id_user_role) VALUES (p_id_user, v_role_id);
+
+            SET v_affected_rows = v_affected_rows + ROW_COUNT();
+            IF v_affected_rows = 0 THEN
+                SET v_error_message = 'User update failed';
+                SIGNAL SQLSTATE '45044';
+            END IF;
+        END IF;
+
+    END WHILE;
+
     COMMIT;
     SET p_spstate = 1;
 END //

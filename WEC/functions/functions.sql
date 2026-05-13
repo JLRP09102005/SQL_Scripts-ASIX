@@ -278,55 +278,6 @@ BEGIN
     RETURN v_select_result;
 END //
 
--- PENDING TO CHANGE IT TO PROCEDURE METHOD
-/* CREATE FUNCTION IF NOT EXISTS fn_CheckForExtraDependences(p_table_name VARCHAR(64), p_record_id INT)
-RETURNS TINYINT(1) DETERMINISTIC
-READS SQL DATA
-BEGIN
-
-    DECLARE v_dep_table VARCHAR(64) DEFAULT '';
-    DECLARE v_dep_column VARCHAR(64) DEFAULT '';
-    DECLARE v_count INT DEFAULT 0;
-    DECLARE v_total INT DEFAULT 0;
-    DECLARE v_done TINYINT(1) DEFAULT 0;
-    DECLARE v_sql TEXT;
-
-    DECLARE cur_deps CURSOR FOR
-        SELECT kcu.table_name, kcu.column_name
-        FROM information_schema.key_column_usage kcu
-        WHERE kcu.referenced_table_name = p_table_name
-            AND kcu.referenced_table_schema = DATABASE();
-    
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
-
-    OPEN cur_deps;
-
-    WHILE v_done != 1 DO
-
-        FETCH cur_deps INTO v_dep_table, v_dep_column;
-
-        SET v_sql = CONCAT(
-            'SELECT COUNT(*) INTO @dep_count FROM `',v_dep_table, '` WHERE `', v_dep_column, '` = ', p_record_id
-        );
-
-        PREPARE stmt FROM v_sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET v_total = v_total + @dep_count;
-
-    END WHILE;
-
-    CLOSE cur_deps;
-
-    IF NOT v_total = 0 THEN
-        RETURN 1;
-    END IF;
-    
-    RETURN 0;
-
-END // */
-
 CREATE FUNCTION IF NOT EXISTS fn_CheckInscriptionData(p_vehicles_quantity TINYINT, p_registration_date TIMESTAMP)
 RETURNS TINYINT(1) DETERMINISTIC
 BEGIN
@@ -352,6 +303,40 @@ BEGIN
     JOIN user_roles ur ON ur.id_user_roles = uu.id_user_role
     WHERE uu.id_user = p_user_id AND ur.role_name = p_role_name;
     RETURN IF(v_count > 0, 1, 0);
+END //
+
+CREATE FUNCTION IF NOT EXISTS fn_ExistsRoleByName(p_role_name VARCHAR(100))
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+
+    DECLARE v_role_id INT DEFAULT NULL;
+
+    SELECT id_user_roles INTO v_role_id
+    FROM user_roles
+    WHERE role_name = p_role_name
+    LIMIT 1;
+
+    RETURN v_role_id;
+
+END //
+
+CREATE FUNCTION IF NOT EXISTS fn_UserIdbyEmail(p_user_email VARCHAR(255))
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+
+    DECLARE v_user_id INT DEFAULT NULL;
+
+    SELECT id_user INTO v_user_id
+    FROM users
+    WHERE email = p_user_email
+    LIMIT 1;
+
+    RETURN v_user_id;
+
 END //
 
 CREATE FUNCTION IF NOT EXISTS fn_CheckEmailCorrectFormat(p_email VARCHAR(100))

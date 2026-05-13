@@ -358,6 +358,42 @@ BEGIN
     ORDER BY pr.id_penalty, pr.id_result;
 END //
 
+-- 1.11 Ver todos los usuarios y sus roles asignados (admin)
+CREATE PROCEDURE IF NOT EXISTS sp_admin_all_users (
+    IN p_user_id INT
+)
+DETERMINISTIC
+READS SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Admin: view all users.'
+BEGIN
+
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        RESIGNAL;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_user_id)) THEN
+        SIGNAL SQLSTATE '45099' SET MESSAGE_TEXT = 'User ID cannot be null';
+    END IF;
+
+    IF NOT (fn_UserHasRole(p_user_id, 'software-administrator') OR fn_UserHasRole(p_user_id, 'administratorDB')) THEN
+        SIGNAL SQLSTATE '45099' SET MESSAGE_TEXT = 'Insufficient privileges: admin role required';
+    END IF;
+
+    SELECT
+        us.*,
+        GROUP_CONCAT(userol.role_name ORDER BY userol.role_name SEPARATOR ', ') AS role
+    FROM users us
+    LEFT JOIN user_userrole useuse ON useuse.id_user = us.id_user
+    LEFT JOIN user_roles userol ON userol.id_user_roles = useuse.id_user_role
+    GROUP BY us.id_user
+    ORDER BY us.username;
+
+END //
+
 -- ============================================================
 -- 2. COMMISSIONER BOSS (SELECT global en penalties, results, races)
 -- ============================================================
