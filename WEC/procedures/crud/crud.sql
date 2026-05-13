@@ -2216,7 +2216,7 @@ BEGIN
         SIGNAL SQLSTATE '45043';
     END IF;
 
-    IF NOT fn_IdRegisterExistsFromTeams(p_team_id) THEN
+    IF NOT p_team_id IS NULL AND fn_IdRegisterExistsFromTeams(p_team_id) THEN
         SET v_error_message = 'Team ID does not exist';
         SIGNAL SQLSTATE '45043';
     END IF;
