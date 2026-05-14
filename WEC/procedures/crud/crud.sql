@@ -1085,10 +1085,10 @@ BEGIN
         SIGNAL SQLSTATE '45008';
     END IF;
 
-    IF p_event_date < NOW() THEN
+    /* IF p_event_date < NOW() THEN
         SET v_error_message = 'Event date cannot be in the past';
         SIGNAL SQLSTATE '45008';
-    END IF;
+    END IF; */
 
     IF p_event_duration < '01:00:00' THEN
         SET v_error_message = 'Event duration must be at least 1 hour';
@@ -1144,10 +1144,10 @@ BEGIN
         SIGNAL SQLSTATE '45026';
     END IF;
 
-    IF p_event_date < NOW() THEN
+    /* IF p_event_date < NOW() THEN
         SET v_error_message = 'Event date cannot be in the past';
         SIGNAL SQLSTATE '45026';
-    END IF;
+    END IF; */
 
     IF p_event_duration < '01:00:00' THEN
         SET v_error_message = 'Event duration must be at least 1 hour';
