@@ -1,13 +1,13 @@
-REVOKE ALL ON wec.* FROM 'administratorDB';
-REVOKE ALL ON wec.* FROM 'comissioner-boss';
-REVOKE ALL ON wec.* FROM 'manufacturer-representative';
-REVOKE ALL ON wec.* FROM 'mechanical-boss';
-REVOKE ALL ON wec.* FROM 'pilot';
-REVOKE ALL ON wec.* FROM 'team-manager';
-REVOKE ALL ON wec.* FROM 'race-director';
-REVOKE ALL ON wec.* FROM 'data-analyst';
-REVOKE ALL ON wec.* FROM 'readonly-public';
-REVOKE ALL PRIVILEGES ON wec.* FROM 'wec_readonly'@'localhost';
+REVOKE ALL ON wec.* FROM 'administratorDB' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'comissioner-boss' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'manufacturer-representative' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'mechanical-boss' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'pilot' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'team-manager' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'race-director' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'data-analyst' IF EXISTS;
+REVOKE ALL ON wec.* FROM 'readonly-public' IF EXISTS;
+REVOKE ALL PRIVILEGES ON wec.* FROM 'wec_readonly'@'localhost' IF EXISTS;
 
 DROP ROLE IF EXISTS 'administratorDB';
 DROP ROLE IF EXISTS 'comissioner-boss';
