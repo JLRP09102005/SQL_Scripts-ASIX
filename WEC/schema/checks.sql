@@ -8,8 +8,10 @@ ADD CONSTRAINT IF NOT EXISTS chk_result_time CHECK (final_time != '00:00:00');
 
 ALTER TABLE penalties
 ADD CONSTRAINT IF NOT EXISTS chk_max_penalty_points CHECK(
-    (penalty_type = "POINTS" AND penalty_value <= 25) OR
-    (penalty_type = "TIME" AND penalty_value <= 60)
+    (penalty_type = 'POINTS' AND penalty_value <= 25) OR
+    (penalty_type = 'TIME' AND penalty_value <= 60) OR
+    (penalty_type = 'DSQ') OR
+    (penalty_type = 'DNF')
 );
 
 ALTER TABLE inscriptions
