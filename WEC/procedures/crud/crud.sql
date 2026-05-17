@@ -1832,6 +1832,81 @@ END //
 -- PENALTIES
 -- =================================================================
 
+CREATE PROCEDURE IF NOT EXISTS sp_InsertPenaltyWithResult (
+    IN p_penalty_type CHAR(30),
+    IN p_reason VARCHAR(100),
+    IN p_penalty_value DECIMAL(7,2),
+    IN p_penalty_applies_to VARCHAR(30),
+    IN p_id_result INT,
+    OUT p_spstate TINYINT
+)
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Inserts a penalty and optionally links it to a result.'
+BEGIN
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+    DECLARE v_new_penalty_id INT DEFAULT NULL;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
+        IF v_error_message != '' THEN
+            SIGNAL SQLSTATE '45004' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_penalty_type, p_reason, p_penalty_value, p_penalty_applies_to)) THEN
+        SET v_error_message = 'Parameters cannot be null or empty';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    IF NOT fn_CheckPenaltyTypeCorrect(p_penalty_type) THEN
+        SET v_error_message = 'Invalid penalty type. Must be POINTS, TIME, DSQ, DNF';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    IF p_penalty_value < 0 THEN
+        SET v_error_message = 'Penalty value cannot be negative';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    IF p_penalty_applies_to NOT IN ('TEAM', 'PILOT') THEN
+        SET v_error_message = 'Penalty applies to must be TEAM or PILOT';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    -- Validar id_result solo si se proporcionó
+    IF p_id_result IS NOT NULL AND NOT fn_IdRegisteredFromResults(p_id_result) THEN
+        SET v_error_message = 'Result ID does not exist';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    START TRANSACTION;
+
+    INSERT INTO penalties (penalty_type, reason, penalty_value, penalty_applies_to)
+    VALUES (p_penalty_type, p_reason, p_penalty_value, p_penalty_applies_to);
+
+    SET v_new_penalty_id = LAST_INSERT_ID();
+
+    IF v_new_penalty_id = 0 THEN
+        SET v_error_message = 'Insert failed';
+        SIGNAL SQLSTATE '45004';
+    END IF;
+
+    -- Solo vincula si se pasó un id_result
+    IF p_id_result IS NOT NULL THEN
+        INSERT INTO penalties_results (id_penalty, id_result)
+        VALUES (v_new_penalty_id, p_id_result);
+    END IF;
+
+    COMMIT;
+    SET p_spstate = 1;
+END //
+
 CREATE PROCEDURE IF NOT EXISTS sp_InsertPenaltyData (
     IN p_penalty_type CHAR(30),
     IN p_reason VARCHAR(100),
