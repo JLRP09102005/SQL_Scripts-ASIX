@@ -83,11 +83,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid penalty_type';
     END IF;
 
-    IF NOT v_affected_rows > 0 THEN 
-        SET v_error_message = 'Error executing sp_AddTeamPenalty, there was not affected rows at the transaction';
-        SIGNAL SQLSTATE '45034';
-    END IF;
-
 END //
 
 CREATE PROCEDURE IF NOT EXISTS sp_AddTeamPenaltyTx ( IN p_penalty_type VARCHAR(20), IN p_penalty_value DECIMAL(7,2), IN p_vehicle_id INT, IN p_team_id INT, IN p_race_id INT )
@@ -168,11 +163,6 @@ BEGIN
 
     ELSE
         SIGNAL SQLSTATE '45035' SET MESSAGE_TEXT = 'Invalid penalty_type';
-    END IF;
-
-    IF NOT v_affected_rows > 0 THEN
-        SET v_error_message = 'Error executing sp_AddPilotPenalty, there was not affected rows at the transaction';
-        SIGNAL SQLSTATE '45035';
     END IF;
 
 END //

@@ -305,8 +305,10 @@ BEGIN
 
     SELECT
         pen.*,
+        penres.id_result,
         tea.team_name,
         IF(pen.penalty_applies_to = 'PILOT', pil.pilot_name, NULL) AS pilot_name,
+        IF(pen.penalty_applies_to = 'PILOT', pil.id_pilot, NULL)   AS id_pilot,
         rac.event_name
     FROM penalties pen
     LEFT JOIN penalties_results penres
