@@ -1629,6 +1629,72 @@ END //
 -- =================================================================
 -- RESULTS
 -- =================================================================
+CREATE PROCEDURE sp_InsertResultWithPoints (
+    IN p_position INT,
+    IN p_final_time TIME,
+    IN p_id_vehicle INT,
+    IN p_id_race INT,
+    IN p_id_team INT,
+    OUT p_spstate TINYINT
+)
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+COMMENT 'Inserts a result with zeros and recalculates all points for the race.'
+BEGIN
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
+        IF v_error_message != '' THEN
+            SIGNAL SQLSTATE '45009' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+        END IF;
+    END;
+
+    IF NOT fn_CheckNullEmptyArray(JSON_ARRAY(p_position, p_final_time, p_id_vehicle, p_id_race, p_id_team)) THEN
+        SET v_error_message = 'Parameters cannot be null or empty';
+        SIGNAL SQLSTATE '45009';
+    END IF;
+
+    IF p_position < 1 OR p_position > 60 THEN
+        SET v_error_message = 'Position must be between 1 and 60';
+        SIGNAL SQLSTATE '45009';
+    END IF;
+
+    IF p_final_time = '00:00:00' THEN
+        SET v_error_message = 'Final time cannot be zero';
+        SIGNAL SQLSTATE '45009';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromInscriptions(p_id_vehicle, p_id_race, p_id_team) THEN
+        SET v_error_message = 'Inscription does not exist';
+        SIGNAL SQLSTATE '45009';
+    END IF;
+
+    START TRANSACTION;
+
+    INSERT INTO results (
+        position, final_time, penalty_time,
+        base_points_team, base_points_pilot,
+        penalty_points_team, penalty_points_pilot,
+        id_vehicle, id_race, id_team
+    ) VALUES (
+        p_position, p_final_time, '00:00:00',
+        0, 0, 0, 0,
+        p_id_vehicle, p_id_race, p_id_team
+    );
+
+    COMMIT;
+
+    -- Recalcula puntos de toda la carrera tras el insert
+    CALL sp_UpdateLeaderPoints(p_id_race);
+
+    SET p_spstate = 1;
+END //
 
 CREATE PROCEDURE IF NOT EXISTS sp_InsertResultData (
     IN p_position INT,

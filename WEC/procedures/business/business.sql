@@ -329,7 +329,6 @@ COMMENT 'Updates the points of a result record for a given race and result id. C
 BEGIN
 
     DECLARE v_error_message VARCHAR(255) DEFAULT '';
-    DECLARE v_affected_rows INT default 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -367,13 +366,6 @@ BEGIN
     WHERE 
         res.id_race = p_race_id AND
         res.id_result = p_result_id;
-    
-    SET v_affected_rows = ROW_COUNT();
-
-    IF NOT v_affected_rows > 0 THEN
-        SET v_error_message = 'Error executing sp_AddResultsPoints, there was no affected rows at the transaction';
-        SIGNAL SQLSTATE '45001';
-    END IF;
 
 END //
 
@@ -398,6 +390,70 @@ BEGIN
     CALL sp_AddResultPoints(p_race_id, p_result_id, p_result_points);
     COMMIT;
 
+END //
+
+CREATE PROCEDURE sp_UpdateResultWithPoints (
+    IN p_id_result INT,
+    IN p_position INT,
+    IN p_final_time TIME,
+    IN p_id_vehicle INT,
+    IN p_id_race INT,
+    IN p_id_team INT,
+    OUT p_spstate TINYINT
+)
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+    DECLARE v_error_message VARCHAR(255) DEFAULT '';
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_spstate = 0;
+        ROLLBACK;
+        IF v_error_message != '' THEN
+            SIGNAL SQLSTATE '45028' SET MESSAGE_TEXT = v_error_message;
+        ELSE
+            RESIGNAL;
+        END IF;
+    END;
+
+    IF NOT fn_IdRegisteredFromResults(p_id_result) THEN
+        SET v_error_message = 'Result ID does not exist';
+        SIGNAL SQLSTATE '45028';
+    END IF;
+
+    IF p_position < 1 OR p_position > 60 THEN
+        SET v_error_message = 'Position out of range';
+        SIGNAL SQLSTATE '45028';
+    END IF;
+
+    IF p_final_time = '00:00:00' THEN
+        SET v_error_message = 'Final time cannot be zero';
+        SIGNAL SQLSTATE '45028';
+    END IF;
+
+    IF NOT fn_IdRegisteredFromInscriptions(p_id_vehicle, p_id_race, p_id_team) THEN
+        SET v_error_message = 'Inscription does not exist';
+        SIGNAL SQLSTATE '45028';
+    END IF;
+
+    START TRANSACTION;
+
+    UPDATE results
+    SET position   = p_position,
+        final_time = p_final_time,
+        id_vehicle = p_id_vehicle,
+        id_race    = p_id_race,
+        id_team    = p_id_team
+    WHERE id_result = p_id_result;
+
+    COMMIT;
+
+    -- Recalcula puntos de toda la carrera
+    CALL sp_UpdateLeaderPoints(p_id_race);
+
+    SET p_spstate = 1;
 END //
 
 CREATE PROCEDURE IF NOT EXISTS sp_UpdateLeaderPoints (IN p_new_id_race INT)
